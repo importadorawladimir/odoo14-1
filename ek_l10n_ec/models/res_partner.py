@@ -9,8 +9,8 @@ class ResPartner(models.Model):
 
     def check_vat_ec(self, vat):
         if self.l10n_latam_identification_type_id.is_vat:
-            ruc_vat_type = self.env.ref('l10n_ec.ec_ruc')
-            ced_vat_type = self.env.ref('l10n_ec.ec_dni')
+            ruc_vat_type = self.env.ref('ek_l10n_ec.ec_ruc')
+            ced_vat_type = self.env.ref('ek_l10n_ec.ec_dni')
             if self.l10n_latam_identification_type_id in (ruc_vat_type,ced_vat_type):
                 #temporal fix as stdnum.ec is allowing old format with a dash in between the number                    
                 if not self.vat.isnumeric():

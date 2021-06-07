@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 {
-    'name': 'Ecuadorian Accounting by Trescloud',
+    'name': 'Ekuasoft Group Solutions',
     'version': '3.5', #pendiente mover a 3.6 con el impuesto 351
     'description': '''
 Functional
@@ -43,6 +43,7 @@ Authors:
     'website': 'http://www.trescloud.com',
     'license': 'OEEL-1',
     'depends': [
+        'l10n_ec',
         'l10n_latam_invoice_document',
         'l10n_latam_base',
     ],   
