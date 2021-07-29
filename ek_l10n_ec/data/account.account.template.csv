@@ -1,4 +1,4 @@
-id,code,name,reconcile,user_type_id/id,chart_template_id/id
+﻿id,code,name,reconcile,user_type_id/id,chart_template_id/id
 ec1102050101,1102050101,CUENTAS POR COBRAR CLIENTES NO RELACIONADOS LOCALES,TRUE,account.data_account_type_receivable,l10n_ec_ifrs
 ec1102050102,1102050102,CUENTAS POR COBRAR CLIENTES NO RELACIONADOS EXTRANJEROS,TRUE,account.data_account_type_receivable,l10n_ec_ifrs
 ec1102050103,1102050103,CUENTAS POR COBRAR SUCURSALES PUNTO DE VENTA,TRUE,account.data_account_type_receivable,l10n_ec_ifrs
@@ -90,8 +90,8 @@ ec52012702,610119,SUMINISTROS DE OFICINA,FALSE,account.data_account_type_expense
 ec52012703,610120,SUMINISTROS Y ARTICULOS DE ASEO Y LIMPIEZA,FALSE,account.data_account_type_expenses,l10n_ec_ifrs
 ec52012705,610121,"GUIAS, COURIERS, CORREOS",FALSE,account.data_account_type_expenses,l10n_ec_ifrs
 ec52012706,610122,"PEAJES, PARQUEADEROS Y OTROS",FALSE,account.data_account_type_expenses,l10n_ec_ifrs
-ec52012707,610123,"CAPACITACIÓN, CURSOS Y SEMINARIOS",FALSE,account.data_account_type_expenses,l10n_ec_ifrs
-ec52012708,610124,ALIMENTACIÓN Y REFRIGERIOS,FALSE,account.data_account_type_expenses,l10n_ec_ifrs
+ec52012707,610123,"CAPACITACION, CURSOS Y SEMINARIOS",FALSE,account.data_account_type_expenses,l10n_ec_ifrs
+ec52012708,610124,ALIMENTACION Y REFRIGERIOS,FALSE,account.data_account_type_expenses,l10n_ec_ifrs
 ec52012709,610125,SEGURIDAD Y VIGILANCIA,FALSE,account.data_account_type_expenses,l10n_ec_ifrs
 ec52012710,610126,SERVICIOS DE LIMPIEZA,FALSE,account.data_account_type_expenses,l10n_ec_ifrs
 ec52012712,610127,MANTENIMIENTO EQUIPO COMPUTO,FALSE,account.data_account_type_expenses,l10n_ec_ifrs
