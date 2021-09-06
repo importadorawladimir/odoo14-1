@@ -292,7 +292,7 @@ class ek_import_liquidation(models.Model):
         pick_ids = []
         query = """
                 SELECT picking_id, po.id FROM stock_picking p, stock_move m, ek_import_liquidation_line pol, ek_import_liquidation po
-                    WHERE po.id = %s
+                    WHERE po.id in %s
                     AND po.id = pol.order_id 
                     AND pol.id = m.liquidation_line_id 
                     AND m.picking_id = p.id
@@ -307,7 +307,7 @@ class ek_import_liquidation(models.Model):
         # override the context to get rid of the default filtering on picking type
         action['context'] = {}
         # choose the view_mode accordingly
-        if len(pick_ids) > 1:
+        if len(pick_ids) > 0:
             action['domain'] = "[('id','in',[" + ','.join(map(str, pick_ids)) + "])]"
 
         return action
@@ -859,6 +859,8 @@ class ek_import_liquidation_line(models.Model):
     pvp_mayor = fields.Float(string="PVP Mayor INC. IVA", required=False, help="Precio de Venta incluido iva")
     pvp_minor = fields.Float(string="P.V.P. x Menor", required=False, compute="_amount_pvp", help="Precio de Venta al por menor")
 
+    pvp_public = fields.Float(string="P.V.P. Sugerido", required=False, compute="_calculate_related_arancel", help="Precio de Venta Sugerido al publico")
+
 
 
     def change_product_price(self):
@@ -881,6 +883,8 @@ class ek_import_liquidation_line(models.Model):
             obj.related_fodinfa = len(FODI) > 0 and FODI[0].amount or 0.00
             ADVA = obj.tariff_line_ids.filtered(lambda a: a.code == 'ARA')
             obj.related_advalorem = len(ADVA) > 0 and ADVA[0].amount or 0.00
+            PVP = obj.tariff_line_ids.filtered(lambda a: a.code == 'PVP')
+            obj.pvp_public = len(PVP) > 0 and PVP[0].amount or 0.00
 
     @api.model
     def create(self, vals):
@@ -1008,8 +1012,11 @@ class ek_import_liquidation_line(models.Model):
                      #self.pool.get('ek.import.liquidation.line').get_calculation_lines(self._cr, self._uid,rec.id,
                      #                                                             context=self._context)]
 
-
+            import logging
+            logging.info("AQIUUUUUUUUUUUUUUUUUUUI")
+            logging.info(lines)
             rec.write({'tariff_line_ids': lines})
+
         return True
 
     def _calc_line_base_price(self, cr, uid, line, context = None):

@@ -29,11 +29,6 @@ class ek_import_generate_invoice(models.TransientModel):
         for rec in obtects:
             #
             date_due = fields.Date.context_today(self)
-            pterm = self.env['account.payment.term'].browse(rec.partner_id.property_supplier_payment_term_id and rec.partner_id.property_supplier_payment_term_id.id or 0)
-            if pterm:
-                pterm_list = pterm.compute(value=1, date_ref=self.date)[0]
-                if pterm_list:
-                    date_due=max(line[0] for line in pterm_list)
 
             for line in rec.order_line.filtered(lambda x: not x.invoice_id):
 
@@ -63,7 +58,7 @@ class ek_import_generate_invoice(models.TransientModel):
                 if key not in data_invoice:
                     data_invoice[key] = {
                         'partner_id':   partner.id,
-                        'invoice_payment_term_id':rec.partner_id.property_supplier_payment_term_id and rec.partner_id.property_supplier_payment_term_id.id or None,
+                        'invoice_payment_term_id': rec.partner_id.property_supplier_payment_term_id and rec.partner_id.property_supplier_payment_term_id.id or None,
                         'invoice_date': self.date,
                         'invoice_date_due': date_due,
                         'state':        'draft',

@@ -46,68 +46,58 @@ class ek_tariff_rule(models.Model):
     _order = 'sequence'
     name = fields.Char('Nombre', required=True, readonly=False)
     code = fields.Char(u'Código', size=64, required=True, help=u"El código de las reglas de tarifas se puede usar como referencia en el cálculo de otras reglas. En ese caso, es sensible a mayúsculas y minúsculas.")
-    sequence = fields.Integer('Secuencia', required=True, help=u'Úselo para organizar la secuencia de cálculo', select=True)
-    quantity = fields.Char('Cantidad', help=u"Se usa en el cálculo por porcentaje y cantidad fija.")
+    sequence = fields.Integer('Secuencia', required=True, help=u'Úselo para organizar la secuencia de cálculo', default=5)
+    quantity = fields.Char('Cantidad', help=u"Se usa en el cálculo por porcentaje y cantidad fija.", default='1.0')
     category_id = fields.Many2one('ek.tariff.rule.category', u'Categoría', required=True)
-    active = fields.Boolean('Activo', help=u"Si el campo activo está configurado en falso, le permitirá ocultar la regla de tarifa sin eliminarla.")
-    condition_select = fields.Selection([('none', 'Siempre Verdadero'),('range', 'Intervalo'), ('python', u'Expresión de Python')], u"Condición basada en", required=True)
-    condition_range = fields.Char('Intervalo basado en', readonly=False, help=u'Esto se usará para calcular los valores de% de los campos; en general es básico, pero también puede usar campos de códigos de categorías en minúsculas como nombres de variables (hra, ma, lta, etc.) y la variable básica.')
-    condition_python = fields.Text(u'Condición python', required=True, readonly=False, help=u'Aplica esta regla para el cálculo si la condición es verdadera. Puede especificar condiciones como basic> 1000.')
+    active = fields.Boolean('Activo', help=u"Si el campo activo está configurado en falso, le permitirá ocultar la regla de tarifa sin eliminarla.", default=True)
+    condition_select = fields.Selection([('none', 'Siempre Verdadero'),('range', 'Intervalo'), ('python', u'Expresión de Python')], u"Condición basada en", required=True, default='none')
+    condition_range = fields.Char('Intervalo basado en', readonly=False, help=u'Esto se usará para calcular los valores de% de los campos; en general es básico, pero también puede usar campos de códigos de categorías en minúsculas como nombres de variables (hra, ma, lta, etc.) y la variable básica.', default='contract.wage')
+    condition_python = fields.Text(u'Condición python', required=False, readonly=False, help=u'Aplica esta regla para el cálculo si la condición es verdadera. Puede especificar condiciones como basic> 1000.')
     condition_range_min = fields.Float(u'Intervalo mínimo', required=False, help=u"El monto mínimo, aplicado para esta regla.")
     condition_range_max = fields.Float(u'Intervalo máximo', required=False, help=u"La cantidad máxima, aplicada para esta regla.")
     amount_select  = fields.Selection([
         ('percentage','Porcentaje (%)'),
         ('fix','Importe Fijo'),
         ('code',u'Código Python')
-    ],'Tipo de importe', select=True, required=True, help=u"El método de cálculo para la cantidad de regla.")
-    amount_fix = fields.Float('Importe fijo', digits_compute='Payroll',)
-    amount_percentage = fields.Float('Porcentaje (%)', digits_compute='Payroll Rate', help=u'Por ejemplo, ingrese 50.0 para aplicar un porcentaje del 50%')
-    amount_python_compute = fields.Text(u'Código python')
+    ],'Tipo de importe', select=True, required=True, help=u"El método de cálculo para la cantidad de regla.", default='fix')
+    amount_fix = fields.Float('Importe fijo', digits_compute='Payroll',default=0.00)
+    amount_percentage = fields.Float('Porcentaje (%)', digits_compute='Payroll Rate', help=u'Por ejemplo, ingrese 50.0 para aplicar un porcentaje del 50%',default=0.00)
+
     amount_percentage_base = fields.Char('Porcentaje basado en', required=False, readonly=False, help=u'El resultado se verá afectado por una variable')
     note = fields.Text(u'Descripción')
     param = fields.Boolean(string=u"Parámento",  help=u"Indica que esta regla sera usada para el calculo de las demas y no se tendra en cuenta en la suma del total")
     terms_id = fields.Many2one(comodel_name="ek.incoterms.terms", string="Aplicar A", required=False)
 
-    _defaults = {
-        'amount_python_compute': '''
-# Available variables:
-#----------------------
-# payslip: object containing the payslips
-# employee: hr.employee object
-# contract: hr.contract object
-# rules: object containing the rules code (previously computed)
-# categories: object containing the computed salary rule categories (sum of amount of all rules belonging to that category).
-# worked_days: object containing the computed worked days.
-# inputs: object containing the computed inputs.
-
-# Note: returned value have to be set in the variable 'result'
-
-result = contract.wage * 0.10''',
-        'condition_python':
-'''
-# Available variables:
-#----------------------
-# payslip: object containing the payslips
-# employee: hr.employee object
-# contract: hr.contract object
-# rules: object containing the rules code (previously computed)
-# categories: object containing the computed salary rule categories (sum of amount of all rules belonging to that category).
-# worked_days: object containing the computed worked days
-# inputs: object containing the computed inputs
-
-# Note: returned value have to be set in the variable 'result'
-
-result = rules.NET > categories.NET * 0.10''',
-        'condition_range': 'contract.wage',
-        'sequence': 5,
-        'appears_on_payslip': True,
-        'active': True,
-        'condition_select': 'none',
-        'amount_select': 'fix',
-        'amount_fix': 0.0,
-        'amount_percentage': 0.0,
-        'quantity': '1.0',
-     }
+    amount_python_compute = fields.Text(u'Código python', default='''
+                    # Available variables:
+                    #----------------------
+                    # payslip: object containing the payslips
+                    # employee: hr.employee object
+                    # contract: hr.contract object
+                    # rules: object containing the rules code (previously computed)
+                    # categories: object containing the computed salary rule categories (sum of amount of all rules belonging to that category).
+                    # worked_days: object containing the computed worked days.
+                    # inputs: object containing the computed inputs.
+                    
+                    # Note: returned value have to be set in the variable 'result'
+                    
+                    result = contract.wage * 0.10,
+                            'condition_python':
+                    
+                    # Available variables:
+                    #----------------------
+                    # payslip: object containing the payslips
+                    # employee: hr.employee object
+                    # contract: hr.contract object
+                    # rules: object containing the rules code (previously computed)
+                    # categories: object containing the computed salary rule categories (sum of amount of all rules belonging to that category).
+                    # worked_days: object containing the computed worked days
+                    # inputs: object containing the computed inputs
+                    
+                    # Note: returned value have to be set in the variable 'result'
+                    
+                    result = rules.NET > categories.NET * 0.10'''
+    )
 
     @api.model
     def _recursive_search_of_rules(self, cr, uid, rule_ids, context=None):

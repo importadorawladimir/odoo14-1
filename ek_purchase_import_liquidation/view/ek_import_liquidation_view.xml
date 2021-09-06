@@ -412,6 +412,7 @@
                     <field name="amount_total" readonly="1" sum="Total Costo"/>
                     <field name="factor" readonly="1"/>
                     <field name="unit_cost" readonly="1"/>
+                    <field name="pvp_public"/>
                     <field name="state" invisible="1"/>
                     <field name="purchase_line_id" invisible="1"/>
                     <field name="origin" invisible="1"/>
@@ -439,18 +440,36 @@
             target="new"
         />
 
-        <record id="hr_expense_submit_action_server" model="ir.actions.server">
-            <field name="name">Expense: Submit To Manager</field>
+       <!--  <record id="update_pvp_product" model="ir.actions.server">
+            <field name="name">Actualizar P.V.P en Productos</field>
             <field name="type">ir.actions.server</field>
             <field name="model_id" ref="model_ek_asigned_remove_invoice"/>
             <field name="binding_model_id" ref="model_ek_import_liquidation_line"/>
             <field name="state">code</field>
             <field name="code">
-                if records:
-                    env['ek.asigned.remove.invoice'].browse(env.context['active_id']).open_wizard()
+                raise Warning("OK")
             </field>
         </record>
- <!--
+
+        <record model="ir.actions.server" id="value_action_ek_import_generate_invoice_new">
+            <field name="name">Asignar a Factura</field>
+            <field name="model_id" ref="model_ek_asigned_remove_invoice"/>
+            <field name="binding_model_id" ref="model_ek_import_liquidation_line"/>
+            <field name="view_id" ref="ek_purchase_import_liquidation.view_ek_asigned_remove_invoice_wizard"/>
+            <field name="state">code</field>
+            <field name="code">
+                action = {
+                    "type": "ir.actions.act_window",
+                    "view_mode": "form",
+                    "res_model": "ek.asigned.remove.invoice",
+                    "view_id": "",
+                    "context": "{'default_type':'add'}",
+                    "target": "new",
+                    'res_id': record.id,
+                }
+            </field>
+        </record>
+
          <act_window
             name="Asignar a Factura"
             res_model="ek.asigned.remove.invoice"
