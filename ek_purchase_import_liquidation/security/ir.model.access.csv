@@ -14,3 +14,4 @@ perm_ek_import_liquidation_breakdown_expenses,ek.import.liquidation.breakdown.ex
 perm_ek_import_liquidation_type_docs,ek.import.liquidation.type.docs,model_ek_import_liquidation_type_docs,purchase.group_purchase_user,1,1,1,1
 perm_ek_import_liquidation_related_documents,ek.import.liquidation.related.documents,model_ek_import_liquidation_related_documents,purchase.group_purchase_user,1,1,1,1
 perm_ek_import_liquidation_related_documents_line,ek.import.liquidation.related.documents.line,model_ek_import_liquidation_related_documents_line,purchase.group_purchase_user,1,1,1,1
+perm_ek_country_port,ek.country.port,model_ek_country_port,purchase.group_purchase_user,1,1,1,1

@@ -195,6 +195,10 @@ class ek_import_liquidation(models.Model):
     shipment_count = fields.Integer(string=u'Envíos entrantes', compute="_count_all",  compute_sudo=True)
     shipment_count_not_cancel = fields.Integer(string=u'Envíos entrantes', compute="_count_all",  compute_sudo=True)
 
+    #puertos
+    origin_port_id = fields.Many2one("ek.country.port", string=u"Puerto Origen", states=READONLY_STATES, required=False, )
+    destination_port_id = fields.Many2one("ek.country.port", string=u"Puerto Destino", states=READONLY_STATES, required=False, )
+
     def button_uptade(self):
         for rec in self:
             rec.onchange_purchase_id()
@@ -393,7 +397,7 @@ class ek_import_liquidation(models.Model):
     def purchase_confirm(self):
         for rec in self:
             rec.calculate_liq()
-            rec.write({'state': 'approved'})
+            rec.write({'state': 'approved', 'validator': self.env.user.id, 'date_approve': time.strftime('%Y-%m-%d')})
             rec.order_line.write({'state': 'confirmed'})
 
 
@@ -702,7 +706,7 @@ class ek_import_liquidation_invoice(models.Model):
                 rec.move_id.unlink()
                 for line in rec.import_line_ids:
                     line.write({'invoice_id': False})
-        self.write({'state': 'cancel'})
+            rec.write({'state': 'cancel', 'validator': False, 'date_approve': False})
 
     def create_move(self, rec):
         move_line_pool = self.pool.get('account.move.line')
@@ -1290,3 +1294,9 @@ class ek_import_liquidation_related_documents_line(models.Model):
                                         name=name, price_unit=price_unit, context=context)
 
 
+class ek_country_port(models.Model):
+    _name = 'ek.country.port'
+    _description = u'Puertos'
+
+    name = fields.Text(u'Nombre', required=True)
+    country_id = fields.Many2one("res.country", string=u"País", required=True, )

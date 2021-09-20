@@ -148,9 +148,9 @@
                         <group>
                             <field name="partner_id" context="{'search_default_supplier':1, 'default_supplier':1, 'default_customer':0}"/>  <!--domain="[('supplier','=',True)]"-->
                              <field name="country_id"/>
-                            <field name="purchase_id" domain="[('partner_id','=',partner_id), ('is_import','=',True),('state','in',['purchase','done'])]" attrs="{'invisible': [('type','!=','liquidation')], 'required': [('type','=','liquidation')]}"/>
-                            <field name="purchase_id" domain="[('partner_id','=',partner_id), ('is_import','=',True),('state','in',['purchase','done'])]" attrs="{'invisible': [('type','=','liquidation')], 'required': [('type','!=','liquidation')]}"/>
-                            <field name="purchase_ids" widget="many2many_tags" options="{'no_create': True}" domain="[('state','in',['approved','confirmed']),('id','!=',purchase_id), ('is_import','=',True)]"/>
+                            <field name="purchase_id" domain="[('partner_id','=',partner_id), ('is_import','=',True),('state','in',['purchase'])]" attrs="{'invisible': [('type','!=','liquidation')], 'required': [('type','=','liquidation')]}"/>
+                            <!--<field name="purchase_id" domain="[('partner_id','=',partner_id), ('is_import','=',True),('state','in',['purchase','done'])]" attrs="{'invisible': [('type','=','liquidation')], 'required': [('type','!=','liquidation')]}"/>-->
+                            <field name="purchase_ids" widget="many2many_tags" options="{'no_create': True}" domain="[('state','in',['purchase']),('id','!=',purchase_id), ('is_import','=',True)]"/>
                             <field name="incoterm_id" required="1" on_change="onchange_incoterm_id(incoterm_id, context)" />
 
                         </group>
@@ -159,7 +159,8 @@
                             <field name="origin"/>
                             <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
                             <field name="picking_type_id" on_change="onchange_picking_type_id(picking_type_id, context)" domain="[('code','=','incoming')]" options="{'no_create': True}" groups="stock.group_locations"/>
-
+                            <field name="origin_port_id" domain="[('country_id','=',country_id)]"/>
+                            <field name="destination_port_id" domain="[('id','!=',origin_port_id)]"/>
                         </group>
                     </group>
                     <notebook>
@@ -645,6 +646,49 @@
         <menuitem action="purchase_order_line_action" id="menu_purchase_order_line"
             parent="menu_import_liquidation_analytic"
             sequence="11"/>
+
+
+        <!--Puertos origen y destino -->
+        <record id="view_contry_tree" model="ir.ui.view">
+            <field name="name">ek.country.port.tree</field>
+            <field name="model">ek.country.port</field>
+            <field name="arch" type="xml">
+                <tree string="Puertos" editable="bottom" >
+                    <field name="name"/>
+                    <field name="country_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_contry_filter" model="ir.ui.view">
+            <field name="name">ek.country.port.select</field>
+            <field name="model">ek.country.port</field>
+            <field name="arch" type="xml">
+                <search string="Search Port">
+                    <field name="name" string="Referencia"/>
+                    <field name="country_id" operator="child_of"/>
+                    <group expand="0" string="Agrupar por...">
+                        <filter string="Pais" name="terp-partner" domain="[]" context="{'group_by':'country_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_ek_contry" model="ir.actions.act_window">
+            <field name="name">Puertos</field>
+            <field name="res_model">ek.country.port</field>
+            <field name="view_mode">tree</field>
+            <field name="search_view_id" ref="view_contry_filter"/>
+            <field name="view_id" ref="view_contry_tree"/>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Haga clic para agregar un Puerto.
+              </p>
+            </field>
+        </record>
+
+
+        <menuitem action="action_ek_contry" id="menu_action_ek_contry" parent="menu_liquidation_in_config" groups="purchase.group_purchase_manager"/>
 
     </data>
 </openerp>
