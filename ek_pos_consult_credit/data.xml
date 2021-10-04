@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--Copyright 2014-2016 Ivan Yelizariev <https://it-projects.info/team/yelizariev>
+    Copyright 2015 Alexis de Lattre <https://github.com/alexis-via>
+    Copyright 2016 Stanislav Krotov <https://it-projects.info/team/ufaks>
+    License MIT (https://opensource.org/licenses/MIT). -->
+<odoo>
+    <template id="assets_consult_credit" inherit_id="point_of_sale.assets">
+        <xpath expr="." position="inside">
+<script  type="text/javascript" src="/ek_pos_consult_credit/static/src/js/ekcreditconsult.js" />
+            <script type="text/javascript" src="/ek_pos_consult_credit/static/src/js/pos.js" />
+
+            <script  type="text/javascript" src="/ek_pos_consult_credit/static/src/js/EkconsultCredPopupWidget.js" />
+
+            <link rel="stylesheet" href="/ek_pos_consult_credit/static/src/css/pos.css" id="ekconsultcredit-stylesheet"/>
+
+        </xpath>
+    </template>
+
+</odoo>

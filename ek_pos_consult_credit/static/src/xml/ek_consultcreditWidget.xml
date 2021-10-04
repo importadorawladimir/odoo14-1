@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates id="template" xml:space="preserve">
+        <t t-name="ekcreditconsult"  owl="1">
+        <div class="bottom-left-content">
+
+            <div t-attf-class="button validate">
+                <div class="button-content">
+                    <span class="title" />
+                        Consultar Creditos
+                    <span>
+
+                    </span>
+                    <!-- add space between title and arrow -->
+                    <span>
+                        <i class='fa fa-angle-double-right' />
+                    </span>
+                </div>
+            </div>
+        </div>
+
+   	</t>
+</templates>
+
