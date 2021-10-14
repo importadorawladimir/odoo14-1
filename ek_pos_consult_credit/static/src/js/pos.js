@@ -29,6 +29,7 @@ odoo.define("ek_pos_consult_credit.pos", function (require) {
             console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
             console.log(client_id);
             console.log(journal_credit);
+            console.log(journal_credit[0]);
             console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
 
 

@@ -28,7 +28,7 @@
 									Seleccione un Diario de Credito
 								</div>
 								<div class="content-group mt16">
-									<field name="journal_credit_id" attrs="{'required': [('allow_by_credit', '!=', False)]}"/>
+									<field name="journal_credit_id" attrs=""/>
 								</div>
 							</div>
 						</div>

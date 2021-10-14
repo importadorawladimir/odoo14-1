@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="ek_invoiceauto_pos_config_inherit" model="ir.ui.view">
+        <field name="name">ek.invoiceauto.pos.config.form.</field>
+        <field name="model">pos.config</field>
+        <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@id='iface_invoicing']" position="after">
+               
+                <div class="col-12 col-lg-6 o_setting_box" >
+                            <div class="o_setting_left_pane">
+                                <field name="invoice_background"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="invoice_background"/>
+                                <div class="text-muted">
+                                   Generar Facturas en Segundo Plano al validar la orden
+                                </div>
+
+                            </div>
+                </div>
+               
+            </xpath>
+        </field>
+        </record>       
+  </data>
+</odoo>

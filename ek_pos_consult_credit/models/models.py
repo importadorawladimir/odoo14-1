@@ -22,39 +22,21 @@ _logger = logging.getLogger(__name__)
 class AccountJournal(models.Model):
     _inherit = "account.journal"
 
-    def get_credit_notes_by_client(self, partner):
+    @api.model
+    def get_credit_notes_by_client(self, journal,partner):
         """
-        Get debt details
-
-        :param int limit: max number of records to return
-        :return: dictionary with keys:
-             * partner_id: partner identification
-             * debt: current debt
-             * debts: dictionary with keys:
-
-                 * balance
-                 * journal_id: list
-
-                    * id
-                    * name
-                    * code
-
-             * records_count: total count of records
-             * history: list of dictionaries
-
-                 * date
-                 * config_id
-                 * balance
-                 * journal_code
 
         """
+
         if not partner or  not partner.get('id',False) or partner is None:
             raise UserError("Es necesario definir un Cliente")
 
         domain = [('move_type', '=', 'out_refund'),
                   ("partner_id", "=", partner.get('id',False)),
-                  ("journal_id", "=", self.id),
+                  # ("journal_id", "=", self.id),
                   ("payment_state","=","not_paid")]
+        if journal:
+            domain.append(("journal_id", "=", journal))
         credit_lines = []
         total_balance = 0.00
         credits = self.env["account.move"].search(domain)
