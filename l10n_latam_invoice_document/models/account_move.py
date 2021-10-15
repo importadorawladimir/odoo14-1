@@ -63,7 +63,7 @@ class AccountMove(models.Model):
                 name = name.split(" ", 1)[-1]
             rec.l10n_latam_document_number = name
         remaining = self - recs_with_name
-        remaining.l10n_latam_document_number = False
+        #remaining.l10n_latam_document_number = False
 
     @api.onchange('l10n_latam_document_type_id', 'l10n_latam_document_number')
     def _inverse_l10n_latam_document_number(self):
