@@ -19,6 +19,8 @@ class AccountMove(models.Model):
     l10n_latam_document_number = fields.Char(
         compute='_compute_l10n_latam_document_number', inverse='_inverse_l10n_latam_document_number',
         string='Document Number', readonly=True, states={'draft': [('readonly', False)]}, store=True)
+    l10n_latam_document_auth = fields.Char(
+        string=u'Número de Autorización', readonly=True, states={'draft': [('readonly', False)]})
     l10n_latam_use_documents = fields.Boolean(related='journal_id.l10n_latam_use_documents')
     l10n_latam_manual_document_number = fields.Boolean(compute='_compute_l10n_latam_manual_document_number', string='Manual Number')
 
@@ -61,7 +63,7 @@ class AccountMove(models.Model):
                 name = name.split(" ", 1)[-1]
             rec.l10n_latam_document_number = name
         remaining = self - recs_with_name
-        remaining.l10n_latam_document_number = False
+        #remaining.l10n_latam_document_number = False
 
     @api.onchange('l10n_latam_document_type_id', 'l10n_latam_document_number')
     def _inverse_l10n_latam_document_number(self):

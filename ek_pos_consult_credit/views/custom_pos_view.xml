@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+	
+
+		
+			<!-- Add Many2one Bag Category Field in POS Config -->
+		<record id="inherit_view_ekconsultcredit_form" model="ir.ui.view">
+			<field name="name">inherit_pos_ekconsultcredit_form</field>
+			<field name="model">pos.config</field>
+			<field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
+			<field name="arch" type="xml">
+				<xpath expr="//div[3]" position="after">
+					<h2>POS Consulta de Credito</h2>
+					<div class="row mt16 o_settings_container" id="session_config">
+						<div id="bag" class="col-xs-12 col-md-6 o_setting_box">
+							<div class="o_setting_left_pane">
+								<field name="allow_by_credit"/>
+							</div>
+							<div class="o_setting_right_pane">
+								<label for="allow_by_credit" />
+							</div>
+						</div>
+						<div class="col-xs-12 col-md-6 o_setting_box"  attrs="{'invisible': [('allow_by_credit' ,'=', False)]}">
+							<div class="o_setting_right_pane">
+								<label for="journal_credit_id"/>
+								<div class="text-muted">
+									Seleccione un Diario de Credito
+								</div>
+								<div class="content-group mt16">
+									<field name="journal_credit_id" attrs=""/>
+								</div>
+							</div>
+						</div>
+					</div>			
+				</xpath>
+			</field>
+		</record>
+	</data>
+</odoo>
+
+					
