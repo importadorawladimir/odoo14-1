@@ -1,4 +1,4 @@
-# Copyright 2021 Denis Mudarisov <https://github.com/trojikman>
+# Copyright 2021 Groupsolitions
 # License MIT (https://opensource.org/licenses/MIT).
 {
     "name": "POS: Consulta de Deuda",
@@ -13,20 +13,11 @@
     "external_dependencies": {"python": [], "bin": []},
     "depends": ["point_of_sale"],
     "data": [
-        # "security/pos_debt_notebook_security.xml",
-
         "views/custom_pos_view.xml",
-        # "views.xml",
-        # "views/pos_credit_update.xml",
-        # "wizard/pos_credit_invoices_views.xml",
-        # "wizard/pos_credit_company_invoices_views.xml",
         "data.xml",
-        # "security/ir.model.access.csv",
     ],
     "qweb": [
-        # "static/src/xml/CreditNote.xml",
-        # "static/src/xml/OrderReceipt.xml",
-        # "static/src/xml/PaymentMethodButton.xml",
+
         "static/src/xml/ek_consultcreditWidget.xml",
         "static/src/xml/pos.xml",
     ],

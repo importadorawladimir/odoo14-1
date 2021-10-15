@@ -9,6 +9,3 @@ class pos_config(models.Model):
     journal_credit_id = fields.Many2one('account.journal','Diario de Credito')
     allow_by_credit = fields.Boolean('Permitir visualizar credito')
 
-	
-	
-
