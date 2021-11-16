@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+   <t t-name="UomOrderlinePopup" owl="1">
+       <div class="modal-dialog">
+            <div class="popup">
+                <p class="title">
+                    <t t-esc="props.title"/>
+                </p>
+                <div class="content-container ">
+                    <style>
+                        .multi_uom_button{
+                            transition: all 150ms linear;
+                            background: rgb(230,230,230);
+                            cursor: pointer;
+                        }
+                        .multi_uom_button:nth-child(even) {
+                            background: rgb(247,247,247);
+                        }
+                    </style>
+                    <div style="height: 277px;overflow: scroll;">
+                        <table style="font-size: 16px;width: 100%;line-height: 40px;">
+                            <thead>
+                                <tr class='label' style="background: rgb(247,247,247);">
+                                    <th>Uom</th>
+                                    <th>Price</th>
+                                    <th>Ratio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="props.orderline_allow_uoms" t-as="uom" t-key="uom.id">
+                                    <tr class="multi_uom_button" t-att-data-uom_id="uom.id" t-on-click="_clickUom">
+                                        <td><t t-esc="uom.name"/></td>
+                                        <td><t t-esc="env.pos.format_currency(uom.price)"/></td>
+                                        <td><t t-esc="uom.factor_inv"/><span> </span><t t-esc="props.product.uom_id[1]"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="footer">
+                    <div class="button cancel" t-on-click="confirm">
+                        <t t-esc="props.confirmText"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+   </t>
+</templates>

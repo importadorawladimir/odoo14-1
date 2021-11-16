@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="pos_config_form_view_inherit_pos_multi_uom_product_right" model="ir.ui.view">
+        <field name="name">pos.config.form.view.inherit.pos_multi_uom_product_right</field>
+        <field name="model">pos.config</field>
+        <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
+        <field name="arch" type="xml">
+            <div id="category_reference" position="after">
+                <div class="col-xs-12 col-md-6 o_setting_box">
+                    <div class="o_setting_left_pane">
+                        <field name="allow_multi_uom"/>
+                    </div>
+                    <div class="o_setting_right_pane">
+                        <label for="allow_multi_uom"/>
+                    </div>
+                </div>
+            </div>
+        </field>
+    </record>
+
+    <record id="pos_order_form_view_inherit_pos_multi_uom_product_right" model="ir.ui.view">
+        <field name="name">pos.order.form.view.inherit.pos_multi_uom_product_right</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='lines']/tree/field[@name='product_uom_id']" position="replace">
+                <field name="product_uom"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-inherit="point_of_sale.Orderline" t-inherit-mode="extension">
+        <xpath expr="//li[@class='info']/t[last()]" position="after">
+            <t t-if='env.pos.config.allow_multi_uom'>
+                <t t-if="props.line.get_product().has_multi_uom">
+                    <span> </span>
+                    <span class="uom-button" t-on-click="changeUomLine">
+                        <i class="fa fa-tachometer"/>
+                    </span>
+                </t>
+            </t>
+        </xpath>
+    </t>
+
+</templates>
