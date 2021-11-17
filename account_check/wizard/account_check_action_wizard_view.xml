@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record model="ir.ui.view" id="account_check_action_wizard_form_view">
+        <field name="name">account.check.action.wizard.form</field>
+        <field name="model">account.check.action.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Check Action">
+                <field name="action_type" invisible="1"/>
+                <group>
+                    <field name="date"/>
+                    <field name="journal_id" attrs="{'invisible': [('action_type','!=','bank_deposit')]}"
+                           domain="[('type','=','bank')]"/>
+                </group>
+                <group>
+                    <field name="create_debit_note" attrs="{'invisible':[('action_type','!=','customer_return')]}"/>
+
+                </group>
+                <group invisible="not context.get('third_check')">
+
+                    <field name="has_expense" attrs="{'invisible':[('action_type','!=','reject')]}"/>
+                    <field name="expense_account" domain="[('internal_type', 'in', ['other'])]"
+                           attrs="{'invisible':[('has_expense','=',False)],'required':[('has_expense','=',True)]}"/>
+                    <field name="expense_amount"
+                           attrs="{'invisible':[('has_expense','=',False)],'required':[('has_expense','=',True)]}"/>
+
+                    <field name="expense_to_customer" string="Facturar Gastos al Cliente"
+                           attrs="{'invisible':['|',('action_type','!=','reject'),('has_expense','=',False)]}"/>
+
+                    <field name="internal_expense_to_doc" string="Realizar documento interno al gasto"
+                           attrs="{'invisible':[('action_type','!=','reject')]}"/>
+
+                    <field name="invoice_check_value" string="Factura por el valor del cheque"
+                           help="Factura por el valor del cheque, realiza una nota de debito por el valor total del cheque."
+                           attrs="{'invisible':[('action_type','!=','reject')]}"/>
+
+
+                    <field name="internal_invoice" help="Realizar la factura como un documento interno."
+                           attrs="{'invisible':[('invoice_check_value','!=',True)]}"/>
+                    <!--                    <field name="reason_id"-->
+                    <!--                           attrs="{'invisible':['|',('internal_invoice','!=',True),('invoice_check_value','!=',True)],'required':[('internal_invoice','=',True),('invoice_check_value','=',True)]}"/>-->
+                    <field name="journal_reject_id"
+                           attrs="{'required':['|',('internal_invoice','=',True),('expense_to_customer','=',True)]}"
+                           domain="[('type','not in',['bank'])]"/>
+                    <field name="l10n_latam_available_document_type_ids" invisible="True"
+                           attrs="{'required':['|',('internal_invoice','=',True),('expense_to_customer','=',True)]}"
+                    />
+                    <field name="l10n_latam_use_documents" invisible="True"
+                           attrs="{'required':['|',('internal_invoice','=',True),('expense_to_customer','=',True)]}"
+                    />
+                    <field name="l10n_latam_document_type_id"
+                           attrs="{'required':['|',('internal_invoice','=',True),('expense_to_customer','=',True)]}"
+                    />
+
+                </group>
+                <h3 class="oe_grey" invisible="not context.get('third_check')">Notas</h3>
+                                <ul class="oe_grey" invisible="not context.get('third_check')">
+                    <li>Recuerde validar facturas después de confirmar</li>
+                    <li>
+                        <b>Si se idica en la transacción:  "Realizar documento interno al gastos:"</b>
+                        <br/>Opción 1: Si selecciona "Tiene Gastos?" crea un asiento contable de gastos con el diario del deposito.
+                        y tomando la cuenta de pago de este diario, contra la cuenta seleccionada de gastos.
+                        <br/>Realiza el reverso del asiento del deposito.
+                        <br/>Realiza la anulacion del pago.
+                    </li>
+                    <li>
+                        <b>Si se idica que la transacción tiene gastos el sistema le permite dos opciones:</b>
+                        <br/>Opción 1: Si selecciona "Facturar Gastos al Cliente" se emitirá una nota de debito al
+                        cliente por el valor del gasto y el monto del cheque, debera seleccionar el Diario y Tipo de Documento Factura de Venta,
+                        <br/>Opción 2: Si no selecciona "Facturar Gastos al Cliente" o Seleccion que es un "Documento Interno"
+                        se emitirá solo un asiento de gasto indicando que la empresa asumirá ese valor, este asiento se generara
+                        con el diario del deposito y la cuenta de pago, contra la cuenta de gastos que seleccione.
+
+                    </li>
+                    <li>
+                        <b>Si se idica que la transacción generará "Factura por el valor del cheque":</b>
+                        <br/>Si se marca esta opción se indica que se genere una nota de debito al cliente por el valor
+                        del cheque y no liberará la factura correspondinte que fue pagada con ese cheque, en caso de no
+                        marcar el sistema liberá la factura para emitirle un nuevo pago.
+
+                    </li>
+                </ul>
+
+                <footer>
+                    <button string="Confirm" name="action_confirm" type="object" class="oe_highlight"/>
+                    or
+                    <button string="Cancel" class="oe_link" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_account_check_action_wizard" model="ir.actions.act_window">
+        <field name="name">Check Action</field>
+        <field name="res_model">account.check.action.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>
