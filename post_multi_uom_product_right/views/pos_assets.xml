@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="post_multi_uom_product_right_assets" inherit_id="point_of_sale.assets">
+            <xpath expr="." position="inside">
+                <script type="text/javascript" src="/post_multi_uom_product_right/static/src/js/pos_multi_uom_button_1.js"/>
+                <script type="text/javascript" src="/post_multi_uom_product_right/static/src/js/pos_multi_uom_popup.js"/>
+                <script type="text/javascript" src="/post_multi_uom_product_right/static/src/js/pos_multi_uom_models.js"/>
+            </xpath>
+        </template>
+    </data>
+</odoo>
