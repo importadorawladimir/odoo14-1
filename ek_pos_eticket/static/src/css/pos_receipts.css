@@ -1,0 +1,14 @@
+
+.pos-receipt .pos-receipt-contact {
+    text-align: left;
+    font-size: 95%;
+}
+.pos-receipt .orderlines {
+    font-size: 70%;
+}
+.pos-receipt .pos-receipt-amount {
+    font-size: 70%;
+}
+.pos-receipt .receipt-change {
+    font-size: 70%;
+}
