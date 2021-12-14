@@ -126,11 +126,11 @@ class SriDocumentoElectronico(models.Model):
             'claveacceso': claveacceso,
             'ambiente': company.ambiente_id.ambiente
         })
-        line = self.env['account.edi.document.queue.line']
-        line.create({
-            'queue_id': self.env.ref('l10n_ec_sri_ece.documento_electronico_queue').id,
-            'edi_id': res.id,
-        })
+        #line = self.env['account.edi.document.queue.line']
+        #line.create({
+        #    'queue_id': self.env.ref('l10n_ec_sri_ece.documento_electronico_queue').id,
+       #     'edi_id': res.id,
+        #})
 
         return res
 
