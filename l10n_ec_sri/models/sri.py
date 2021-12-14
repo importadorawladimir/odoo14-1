@@ -122,7 +122,7 @@ class SriDocumentoElectronico(models.Model):
             number[6:15],
             )
         res.write({
-            'tipoemision': 1,
+            'tipoemision': '1',
             'claveacceso': claveacceso,
             'ambiente': company.ambiente_id.ambiente
         })
