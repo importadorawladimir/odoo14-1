@@ -329,7 +329,7 @@ class SriDocumentoElectronico(models.Model):
         :param secuencial: str
         :return:
         """
-        fecha = datetime.strptime(fecha, '%Y-%m-%d')
+        #fecha = datetime.strptime(fecha, '%Y-%m-%d')
         data = [
             fecha.strftime('%d%m%Y'),
             str(comprobante),
