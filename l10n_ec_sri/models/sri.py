@@ -124,7 +124,8 @@ class SriDocumentoElectronico(models.Model):
         res.write({
             'tipoemision': '1',
             'claveacceso': claveacceso,
-            'ambiente': company.ambiente_id.ambiente
+            'ambiente': company.ambiente_id.ambiente,
+            'name': claveacceso
         })
         #line = self.env['account.edi.document.queue.line']
         #line.create({
@@ -424,7 +425,8 @@ class SriDocumentosElectronicosQueue(models.Model):
 
     @api.model
     def process_de_queue(self, ids=None):
-        queue = self.env.ref('l10n_ec_sri_ece.documento_electronico_queue')
+        pass
+        '''queue = self.env.ref('account.edi.document.queue')
         procesadas = queue.queue_line_ids.filtered(
             lambda x: x.sent == True and x.state == 'autorized'
         )
@@ -452,7 +454,7 @@ class SriDocumentosElectronicosQueue(models.Model):
                     sent = de.reference.send_email_de()
                     p.sent = sent
                 except:
-                    p.sent = False
+                    p.sent = False'''
 
 
 class SriDocumentosElectronicosQueueLine(models.Model):

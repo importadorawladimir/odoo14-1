@@ -7,7 +7,7 @@
     "sequence": 14,
     "category": "Point Of Sale",
     "website": "https://www.ekuasoft.com",
-    "depends": ["point_of_sale", "ek_l10n_ec"],
+    "depends": ["point_of_sale", "ek_l10n_ec",'l10n_ec_sri'],
     "data": [
         "views/pos_eticket.xml",
         "views/pos_config.xml",

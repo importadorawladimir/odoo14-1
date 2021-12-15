@@ -42,48 +42,35 @@ odoo.define('ek_pos_eticket.pos_model_ticket', function (require) {
                         fields: ['account_move'],
                         args: [order_server_id, ['account_move', 'company_id']]
                     }).then(function (result_dict) {
-
                         if (result_dict.length) {
-
                             let invoice = result_dict[0].account_move;
                             self.get_order().invoice_id = invoice[1];
                             account_move = result_dict[0]['account_move'][0];
                             company_id = result_dict[0]['company_id'][0];
-                            //console.log("company_id");
-                            //console.log(company_id);
-
-
 
                         }
                     }).then(function (einvoices) {
-
-
                         rpc.query({
                             model: 'account.move',
                             method: 'search_read',
                             args: [[['id', '=', account_move]], ['name',
                                     'invoice_date',
                                     'l10n_latam_document_type_id',
-                                    'company_id',
+                                    'company_id'
                                 ]],
                         }
-
                         ).then(function (einvoicejm) {
-
                             if (account_move > 0) {
                                 console.log("cargando account_move");
-
                                 console.log(einvoicejm);
                                 invoice_name = einvoicejm[0]['name'];
-//                                access_key = einvoicejm[0]['access_key'];
+
                                 l10n_latam_document_type_id = einvoicejm[0]['l10n_latam_document_type_id'];
-//                                         l10n_latam_document_type_id = einvoicejm[0]['l10n_latam_document_type_id'][1].split(" ")[0];
                                 invoice_date_due = einvoicejm[0]['invoice_date'];
                                 var split_invoice_date_due = invoice_date_due.split('-');
                                 invoice_date_due = split_invoice_date_due[2] + "-" + split_invoice_date_due[1] + "-" + split_invoice_date_due[0];
                                 company_id = einvoicejm[0]['company_id'][0];
                             }
-
                         }).then(function (company) {
                             rpc.query({
                                 model: 'res.company',
@@ -92,8 +79,19 @@ odoo.define('ek_pos_eticket.pos_model_ticket', function (require) {
                             }).then(function (company_partner) {
                                 street = company_partner[0]['street'];
                                 city = company_partner[0]['city'];
-                                   country=company_partner[0]['country_id'];
-                            });
+                                country=company_partner[0]['country_id'];
+                            }).then(function (accountedidocument) {
+                                    rpc.query({
+                                        model: 'account.edi.document',
+                                        method: 'search_read',
+                                        args: [[['move_id', '=', account_move]], ['claveacceso']],
+                                    }).then(function (edidocument) {
+                                        access_key = edidocument[0]['claveacceso'];
+
+                                    });
+
+
+                        });
 
 
                         });
@@ -116,7 +114,7 @@ odoo.define('ek_pos_eticket.pos_model_ticket', function (require) {
             if (self.invoice_id) {
                 var invoice_id = self.invoice_id;
                 var invoice = invoice_id.split("(")[0];
-                var invoice = invoice.split(".")[1];
+                var invoice = invoice.replace(/[^0-9]/g, '');
                 var invoice_number = "";
                 var invoice_letter = "";
                 invoice_number = invoice_id.split("(")[0];

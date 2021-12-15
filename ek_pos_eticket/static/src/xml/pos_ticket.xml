@@ -19,20 +19,26 @@
                 </h2>
             </t>
         </xpath>
-        <xpath expr="//t[@t-if='receipt.company.vat']" position="replace">
+            <xpath expr="//t[@t-if='receipt.company.vat']" position="replace">
             <div class="afip-info">
                 <t t-if="receipt.invoice_id">
                    <div>RUC: <t t-esc="receipt.company.vat"/></div>
                     <t t-if="receipt.company.company_registry">
-                   <div>*CONTRIBUYENTE ESPECIAL No.  <t t-esc="receipt.company.company_registry"/> *</div>
+                   <div>*CONTRIBUYENTE ESPECIAL No.  <t t-esc="receipt.company.company_registry"/>
+                       *</div>
                     </t>
-                        <div>Dirección: <t t-esc="receipt.street"/>
+                    <div>Dirección: <t t-esc="receipt.street"/>
                         -
                         <t t-esc="receipt.city"/></div>
                 </t>
             </div>
         </xpath>
+        <xpath expr="//div[hasclass('pos-receipt')]/br" position="replace">
 
+        </xpath>
+            <xpath expr="//div[hasclass('pos-receipt')]/br[1]" position="replace">
+
+        </xpath>
 
             <xpath expr="//t[@t-if='receipt.cashier']" position="replace">
 
@@ -75,7 +81,7 @@
                 <hr/>
                 <strong>
                     <div>DESCRIPCIÓN</div>
-                            <div>CANT. x PRECIO UNIT.
+                    <div>CANT. x PRECIO UNIT.
                        &#160;&#160;&#160;&#160;&#160;&#160;&#160;
                             &#160;&#160;&#160;&#160;&#160;&#160;&#160;
                             &#160;&#160;&#160;&#160;&#160;&#160;&#160;
@@ -84,16 +90,20 @@
                 <hr/>
 
         </xpath>
-         <xpath expr="//div[hasclass('before-footer')]" position="after">
+            <xpath expr="//div[hasclass('before-footer')]" position="after">
             <div class="pos-center-align">
-                <b>*** DOCUMENTO SIN VALIDEZ TRIBUTARIA ***</b><br/>
-                Consulte sus documentos luego de 24 horas en nuestra bandeja online con su correo eletrónico registrado en: <b>
+                <b>*** DOCUMENTO SIN VALIDEZ TRIBUTARIA ***</b>
+                <br/>
+                Consulte sus documentos luego de 24 horas en nuestra bandeja online con su correo eletrónico registrado
+                en:
+                <b>
                 <t t-if="receipt.company.website">
                     <div><t t-esc="receipt.company.website" /></div>
                 </t>
             </b>
                 <br/>
-                Clave de Acceso:<br/>
+                Clave de Acceso:
+                <br/>
                 <div style="font-size: 10px !important;">
                     <t t-if='receipt.access_key'>
 
