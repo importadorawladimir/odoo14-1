@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="point_of_sale.template" xml:space="preserve">
+
+    
+        <t t-name="OrderReceipt" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">
+        <!--<t t-extend="OrderReceipt">
+            <t t-name="OrderReceipt" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">-->
+            <!--<xpath expr="//t[@t-if='receipt.company.phone']" position="before">
+                <div style="margin-top:3px;">
+                    <t t-if="receipt.company.phone">
+                        <t t-esc="receipt.company.phone"/>
+                    </t>
+                </div>
+            </xpath>-->
+            <xpath expr="//t[@t-if='receipt.company.contact_address']" position="replace">
+            <t t-if="receipt.company.contact_address">
+                <h2>
+                    <t t-esc="receipt.company.contact_address"/>
+                </h2>
+            </t>
+        </xpath>
+            <xpath expr="//t[@t-if='receipt.company.vat']" position="replace">
+            <div class="afip-info">
+                <t t-if="receipt.invoice_id">
+                   <div>RUC: <t t-esc="receipt.company.vat"/></div>
+                    <t t-if="receipt.company.company_registry">
+                   <div>*CONTRIBUYENTE ESPECIAL No.  <t t-esc="receipt.company.company_registry"/>
+                       *</div>
+                    </t>
+                    <div>Dirección: <t t-esc="receipt.street"/>
+                        -
+                        <t t-esc="receipt.city"/></div>
+                </t>
+            </div>
+        </xpath>
+        <xpath expr="//div[hasclass('pos-receipt')]/br" position="replace">
+
+        </xpath>
+            <xpath expr="//div[hasclass('pos-receipt')]/br[1]" position="replace">
+
+        </xpath>
+
+            <xpath expr="//t[@t-if='receipt.cashier']" position="replace">
+
+                <t t-if="receipt.invoice_id">
+                    <div class="afip-invoice-info">
+                        <hr/>
+                        <strong>
+                            N° DE FACTURA:
+                            <t t-esc="receipt.invoice_id"/>
+                            <br/>
+                            FECHA:
+                            <t t-esc="receipt.invoice_date_due"/></strong>
+                        <br/>
+                        <hr/>
+                    </div>
+                </t>
+                <t t-if='receipt.client'>
+                    <div>Cliente: <t t-esc='receipt.client.name'/></div>
+                    <t t-if="receipt.client.email">
+                        <div>Correo: <t t-esc='receipt.client.email'/></div>
+
+                    </t>
+                    <t t-if="receipt.client.street">
+                       <div>Direccion: <t t-esc='receipt.client.street'/></div>
+                    </t>
+                    <t t-if="receipt.client.vat">
+                      <div>Identificacion: <t t-esc='receipt.client.vat'/></div>
+                    </t>
+
+
+
+                </t>
+
+                <t t-if='receipt.cashier'>
+                    <div class='cashier'>
+                        <hr/>
+                        <div>Servido por <t t-esc='receipt.cashier'/></div>
+                    </div>
+                </t>
+                <hr/>
+                <strong>
+                    <div>DESCRIPCIÓN</div>
+                    <div>CANT. x PRECIO UNIT.
+                       &#160;&#160;&#160;&#160;&#160;&#160;&#160;
+                            &#160;&#160;&#160;&#160;&#160;&#160;&#160;
+                            &#160;&#160;&#160;&#160;&#160;&#160;&#160;
+                        IMPORTE</div>
+                    </strong>
+                <hr/>
+
+        </xpath>
+            <xpath expr="//div[hasclass('before-footer')]" position="after">
+            <div class="pos-center-align">
+                <b>*** DOCUMENTO SIN VALIDEZ TRIBUTARIA ***</b>
+                <br/>
+                Consulte sus documentos luego de 24 horas en nuestra bandeja online con su correo eletrónico registrado
+                en:
+                <b>
+                <t t-if="receipt.company.website">
+                    <div><t t-esc="receipt.company.website" /></div>
+                </t>
+            </b>
+                <br/>
+                Clave de Acceso:
+                <br/>
+                <div style="font-size: 10px !important;">
+                    <t t-if='receipt.access_key'>
+
+                         <t t-esc="receipt.access_key"/>
+                    </t>
+
+                </div>
+            </div>
+        </xpath>
+
+
+
+    </t>
+</templates>
