@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit Form View to Modify it -->
+        <record id="account_tax_compound_form" model="ir.ui.view">
+            <field name="name">account.tax.compound.form</field>
+            <field name="model">account.tax</field>
+            <field name="inherit_id" ref="account.view_tax_form"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//page[@name='definition']/div" position="after">
+                    <!-- Add your fields or attributes here -->
+                    <field name="compound_tax_ids" attrs="{'invisible':['|', ('amount_type','!=','compound'), ('type_tax_use','=','none')]}" domain="[('type_tax_use','in',('none',type_tax_use)), ('amount_type','!=','compound')]">
+                        <tree string="Impuestos Compuestos">
+                            <field name="sequence" widget="handle"/>
+                            <field name="name"/>
+                            <field name="amount_type"/>
+                            <field name="amount"/>
+                        </tree>
+                    </field>
+                </xpath>
+
+                <!--<xpath expr="//page[@name='definition']/div" position="attributes">
+                    <attribute name="attrs">{'invisible': [('amount_type', 'in', ('group','compound'))]}</attribute>
+                </xpath>-->
+
+            </field>
+        </record>
+
+    </data>
+</odoo>
