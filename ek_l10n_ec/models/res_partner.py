@@ -44,7 +44,7 @@ class ResPartner(models.Model):
     def _check_exist_parnter(self):
         for record in self:
             exits = 0
-            if record.vat and record.vat != '':
+            if record.vat and record.vat != '' and record.parent_id = False:
                 exits = self.search_count([('l10n_latam_identification_type_id', '=', record.l10n_latam_identification_type_id.id),('vat','=',record.vat),('company_id','=',record.company_id.id)])
 
             if exits > 1:
