@@ -43,7 +43,9 @@ class ResPartner(models.Model):
     @api.constrains('vat','l10n_latam_identification_type_id','company_id')
     def _check_exist_parnter(self):
         for record in self:
-            exits = self.search_count([('l10n_latam_identification_type_id', '=', record.l10n_latam_identification_type_id.id),('vat','=',record.vat),('company_id','=',record.company_id.id)])
+            exits = 0
+            if record.vat and record.vat != '' and not record.parent_id:
+                exits = self.search_count([('l10n_latam_identification_type_id', '=', record.l10n_latam_identification_type_id.id),('vat','=',record.vat),('company_id','=',record.company_id.id)])
 
             if exits > 1:
                 raise ValidationError("Los clientes/proveedores deben ser únicos.")
