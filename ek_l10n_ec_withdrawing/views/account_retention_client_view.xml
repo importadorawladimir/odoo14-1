@@ -72,7 +72,7 @@
             <field name="name">account.retention.withdrawing.tree</field>
             <field name="model">account.retention</field>
             <field name="arch" type="xml">
-                <tree string="Retenciones" sample="1">
+                <tree string="Retenciones">
                     <field name="name"/>
                     <field name="partner_id" optional="show"/>
                     <field name="ref" optional="show"/>

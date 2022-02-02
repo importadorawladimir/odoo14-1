@@ -13,16 +13,18 @@ class AccountMove(models.Model):
 
 
     def action_post(self):
-        rec = super(AccountMove, self).action_post()
-        if self.move_type == 'in_invoice':
-            return self.action_in_retention_create()
+        for isec in self:
+            rec = super(AccountMove, isec).action_post()
+            if isec.move_type == 'in_invoice':
+                return isec.action_in_retention_create()
 
         return rec
 
     def button_draft(self):
-        rec = super(AccountMove, self).button_draft()
-        if self.move_type == 'in_invoice':
-            return self.action_in_retention_cancel_draft()
+        for isec in self:
+            rec = super(AccountMove, isec).button_draft()
+            if isec.move_type == 'in_invoice':
+                return isec.action_in_retention_cancel_draft()
 
 
     def action_in_retention_cancel_draft(self):

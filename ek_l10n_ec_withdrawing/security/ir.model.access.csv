@@ -1,2 +1,3 @@
-id ,name      ,model_id:id                ,group_id:id                           ,perm_read,perm_write,perm_create,perm_unlink
-access_account_retention,account.retention,model_account_retention,account.group_account_invoice,1        ,1         ,1          ,1
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_account_retention,account_retention,model_account_retention,"account.group_account_invoice",1,1,1,1
+access_account_retention_tax,account_retention_client_tax,model_account_retention_client_tax,"account.group_account_invoice",1,1,1,1

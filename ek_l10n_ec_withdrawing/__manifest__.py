@@ -15,18 +15,19 @@ Authors:
     'website': 'http://www.ekuasoft.com',
     'license': 'OEEL-1',
     'depends': [
-        'l10n_ec',
-        'account'
+        'ek_l10n_ec',
+        'account',
+        'l10n_latam_invoice_document'
     ],   
     'data': [
         'views/account_retention_view.xml',
         'views/account_move_view.xml',
         'views/account_journal_view.xml',
         'views/account_retention_client_view.xml',
-        #'security/ir.model.access.csv',
+        'security/ir.model.access.csv',
         'security/l10n_ec_withdrawing_security.xml'
     ],
     'installable': True,
     'auto_install': False,
-    'application': False,
+    'application': True,
 }
