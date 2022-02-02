@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<data>
+
+		<record id='ek_l10n_ec.ec_ruc' model='l10n_latam.identification.type'>
+			<field name="electronic_code">04</field>
+			<field name='country_id' ref='base.ec'/>
+	    </record>
+	    <record id='ek_l10n_ec.ec_dni' model='l10n_latam.identification.type'>
+			<field name="electronic_code">05</field>
+	    </record>
+	    <record id='ek_l10n_ec.ec_unknown' model='l10n_latam.identification.type'>
+			<field name="electronic_code">08</field>
+			<field name='country_id' ref='base.ec'/>
+	    </record>
+
+		<record id='l10n_latam_base.it_pass' model='l10n_latam.identification.type'>
+			<field name="electronic_code">08</field>
+	    </record>
+
+		<record id='l10n_latam_base.it_vat' model='l10n_latam.identification.type'>
+			<field name="electronic_code">05</field>
+	    </record>
+
+		<record id='l10n_latam_base.it_fid' model='l10n_latam.identification.type'>
+			<field name="electronic_code">08</field>
+			<field name='country_id' ref='base.ec'/>
+	    </record>
+
+	</data>
+</odoo>

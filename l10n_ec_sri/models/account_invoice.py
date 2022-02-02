@@ -3,7 +3,7 @@ import unicodedata  # para normalizar el nombre
 from collections import OrderedDict
 from datetime import datetime
 
-import pytz
+import pytz, logging
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
@@ -22,6 +22,15 @@ class AccountMoveLine(models.Model):
 class AccountMove(models.Model):
     _inherit = 'account.move'
 
+    #electronic_payment = fields.Selection(string=u"Pago Electrónico",
+    #                                      selection=[('01', u'SIN UTILIZACIÓN DEL SISTEMA FINANCIERO'),
+    #                                                 ('16', u'TARJETA DE DÉBITO'), ('17', u'DINERO ELECTRÓNICO'),
+    #                                                 ('18', 'TARJETA PREPAGO'), ('19', u'TARJETA DE CRÉDITO'),
+    #                                                 ('20', u'OTROS CON UTILIZACIÓN DEL SISTEMA FINANCIERO'),
+    #                                                 ('21', u'ENDOSO DE TÍTULOS')], required=False, default="20")
+    l10n_latam_document_auth = fields.Char(
+        string='Autorizacion',
+        required=False)
 
     def normalize_text(self, s, result='unicode'):
         remove = ['Mn', 'Po', 'Pc', 'Pd', 'Pf', 'Pi', 'Ps']
@@ -36,6 +45,9 @@ class AccountMove(models.Model):
         if fmt == 'dmy':
             return datetime.strptime(date, '%Y-%m-%d').strftime('%d/%m/%Y')
 
+    def normalize_date_two(self, date, fmt='dmy'):
+        if fmt == 'dmy':
+            return date.strftime('%d/%m/%Y')
 
     def _get_custom_attachments(self):
         """
@@ -141,29 +153,61 @@ class AccountMove(models.Model):
         y facturas.
         return: [(nombre,valor),(nombre,valor)]
         """
-        return []
+        info = []
+
+        if self.partner_id:
+            if self.partner_id.email:
+
+                info.append(('Correo', self.partner_id.email))
+            if self.partner_id.street:
+                info.append(('Direccion', self.normalize(self.partner_id.street or '  ')))
+            if self.partner_id.phone:
+                info.append(('Telefono', self.normalize(self.partner_id.phone or '  ')))
+        if self.narration:
+            info.append(('Terminos y condiciones', self.normalize(self.narration)))
+        return info
 
 
-    def get_infotributaria_dict(
-            self, ambiente_id, tipoemision, company, ruc,
-            claveacceso, comprobante, establecimiento,
-            puntoemision, secuencial):
+
+    def get_infotributaria_dict(self, ambiente_id, tipoemision, company,claveacceso):
+
+        number = self.l10n_latam_document_number
+        establecimiento = number[0:3]
+        puntoemision = number[3:6]
+        secuencial = number[6:15]
 
         infoTributaria = OrderedDict([
             ('ambiente', ambiente_id.ambiente),
             ('tipoEmision', tipoemision),
             ('razonSocial', self.normalize(company.name)),
-            ('nombreComercial', self.normalize(
-                company.partner_id.tradename or company.name)),
-            ('ruc', ruc),
+            ('nombreComercial', self.normalize(company.company_registry or company.name)),
+            ('ruc', company.vat[2:15]),
             ('claveAcceso', claveacceso),
-            ('codDoc', comprobante),
+            ('codDoc', self.l10n_latam_document_type_id.electronic_code),
             ('estab', establecimiento),
             ('ptoEmi', puntoemision),
             ('secuencial', secuencial),
             ('dirMatriz', self.normalize(
                 company.street or company.street + company.street2)),
         ])
+
+        if company.agent_retention:
+            number_resolution = company.ar_number_resolution
+            number_resolution = number_resolution.split('-')
+
+            number_resolution_int = int(number_resolution[len(number_resolution) - 1])
+            if number_resolution_int > 0:
+                agenteRetencion = number_resolution_int
+                infoTributaria.update({'agenteRetencion': agenteRetencion})
+                #infoTributaria.append(OrderedDict([('agenteRetencion', agenteRetencion)]))
+            #else:
+            #    raise Warning(
+            #        u"Compania Agente Retencion Error en el numero de Resolucion, el campo final debe de ser numérico\n "
+            #        u"[ %s ]" % company.ar_number_resolution)
+        if company.regime_micro:
+            infoTributaria.update({'regimenMicroempresas': u'CONTRIBUYENTE RÉGIMEN MICROEMPRESAS'})
+            #infoTributaria.append(OrderedDict([('regimenMicroempresas', u'CONTRIBUYENTE RÉGIMEN MICROEMPRESAS')]))
+
 
         return infoTributaria
 
@@ -203,114 +247,97 @@ class AccountMove(models.Model):
          claveacceso: string,
          tipoemision: string,
         """
-        ambiente_id = self.env.user.company_id.ambiente_id
-        company = self.env.user.company_id
-        company_fiscal = company.partner_id.property_account_position_id
-        ruc = company.vat
+        ambiente_id = self.company_id.ambiente_id
+        company = self.company_id
+        #company_fiscal = company.partner_id.property_account_position_id
+        move_type = self.move_type
+        ruc = company.vat[2:15]
+        currency = self.journal_id.currency_id
 
         if ambiente_id.ambiente == '1':
             # Si el ambiente es de pruebas enviamos siempre la fecha actual.
             fechaemision = fields.Date.context_today(self)
         else:
-            fechaemision = self.date_invoice
+            fechaemision = self.invoice_date
 
-        autorizacion_id = self.autorizacion_id
-        comprobante_id = self.comprobante_id
-        comprobante = comprobante_id.code
-        establecimiento = self.establecimiento
-        puntoemision = self.puntoemision
+
         tipoemision = '1'  # offline siempre es normal.
-        secuencial = self.secuencial.zfill(9)
         partner = self.partner_id
-        fiscal = partner.property_account_position_id
-        de = self.env['account.edi.document']
-        claveacceso = de.get_claveacceso(
-            fechaemision, comprobante, ruc, ambiente_id,
-            establecimiento, puntoemision, secuencial)
+        number = self.l10n_latam_document_number
 
-        infoTributaria = self.get_infotributaria_dict(
-            ambiente_id, tipoemision, company, ruc,
-            claveacceso, comprobante, establecimiento,
-            puntoemision, secuencial)
+        establecimiento = number[0:3]
+        puntoemision = number[3:6]
+        secuencial = number[6:15]
+
+        de = self.env['account.edi.document']
+
+
+        claveacceso = de.get_claveacceso(
+            fechaemision,
+            self.l10n_latam_document_type_id.electronic_code,
+            ruc,
+            company.ambiente_id,
+            number[0:3],
+            number[3:6],
+            number[6:15],
+            )
+
+        infoTributaria = self.get_infotributaria_dict(ambiente_id, tipoemision, company,claveacceso)
 
         totalConImpuestos = OrderedDict([
             ('totalImpuesto', []),
         ])
 
-        for tax in self.sri_tax_line_ids:
-            if tax.group in ('ImpGrav', 'Imponible', 'NoGraIva', 'ImpExe', 'Ice', 'Irbpnr'):
+        for tax in self.line_ids.filtered(lambda a: a.tax_line_id):
+            if tax.tax_group_id and tax.tax_group_id.l10n_ec_type in ('vat12', 'vat14', 'zero_vat', 'not_charged_vat', 'exempt_vat', 'ice','irbpnr'):
                 totalConImpuestos['totalImpuesto'] = OrderedDict([
-                    ('codigo', tax.codigo),
-                    ('codigoPorcentaje', tax.codigoporcentaje),
+                    ('codigo', tax.tax_line_id.tax_group_id.l10n_ec_electronic_code),
+                    ('codigoPorcentaje', tax.tax_line_id.l10n_ec_electronic_code),
                     ('descuentoAdicional', '{:.2f}'.format(0)),  # TODO
-                    ('baseImponible', '{:.2f}'.format(tax.base)),
-                    ('valor', '{:.2f}'.format(abs(tax.amount))),
+                    ('baseImponible', '{:.2f}'.format(tax.tax_base_amount)),
+                    ('tarifa', '{:.2f}'.format(tax.tax_line_id.amount)),
+                    ('valor', '{:.2f}'.format(abs(tax.price_total))),
                 ])
-
         pagos = OrderedDict([
             ('pago', []),
         ])
 
-        for p in self.payment_ids:
-            pagos['pago'].append(
-                OrderedDict([
-                    ('formaPago', p.formapago_id.code),
-                    ('total', '{:.2f}'.format(p.amount)),
-                    ('plazo', 30),  # TODO
-                    ('unidadTiempo', 'dias'),  # TODO
-                ]))
 
-        if sum(self.payment_ids.mapped('amount')) < self.amount_total:
-            pagos['pago'].append(
-                OrderedDict([
-                    ('formaPago', partner.formapago_id.code or '01'),
-                    ('total', '{:.2f}'.format(self.amount_total -
-                                              sum(self.payment_ids.mapped('amount')))),
-                    ('plazo', 30),  # TODO
-                    ('unidadTiempo', 'dias'),  # TODO
-                ])
-            )
-
-        infoFactura = OrderedDict([
-            ('fechaEmision', self.normalize_date(fechaemision)),
-            ('dirEstablecimiento', self.normalize(
-                autorizacion_id.direstablecimiento or company.street or company.street + company.street2)),
-            ('contribuyenteEspecial', company.contribuyenteespecial or '000'),
-            ('obligadoContabilidad',
-             company_fiscal.obligada_contabilidad and 'SI' or 'NO'),
-            ('tipoIdentificacionComprador',
-             fiscal.identificacion_id.tpidcliente),
-            ('guiaRemision', '000-000-000000000'),  # TODO
-            ('razonSocialComprador', self.normalize(partner.name)),
-            ('identificacionComprador', partner.vat),
-            ('direccionComprador', partner.street),
-            ('totalSinImpuestos', '{:.2f}'.format(self.amount_untaxed)),
-            ('totalDescuento', '{:.2f}'.format(self.price_discount)),
-            ('totalConImpuestos', totalConImpuestos),
-            ('propina', '{:.2f}'.format(self.get_propina())),
-            ('importeTotal', '{:.2f}'.format(self.total)),
-            ('moneda', 'DOLAR'),
-            ('pagos', pagos),
-        ])
+        pagos['pago'].append(
+            OrderedDict([
+                ('formaPago', '20'),
+                ('total', '{:.2f}'.format(self.amount_total)),
+                ('plazo', 0),  # TODO
+                ('unidadTiempo', 'dias'),  # TODO
+            ]))
 
         detalles = OrderedDict([
             ('detalle', []),
         ])
-
+        totalDescuento = 0.00
         for line in self.invoice_line_ids:
             impuestos = OrderedDict([
                 ('impuesto', []),
             ])
+            #line_id | tax_id | base | amount | group
+            for tax in line.tax_ids:
+                if tax.tax_group_id and tax.tax_group_id.l10n_ec_type in ('vat12', 'vat14', 'zero_vat', 'not_charged_vat', 'exempt_vat', 'ice', 'irbpnr'):
+                    # Compute 'price_subtotal'.
+                    line_discount_price_unit = line.price_unit * (1 - (line.discount / 100.0))
+                    subtotal = line.quantity * line_discount_price_unit
 
-            for tax in line.sri_tax_line_ids:
-                if tax.group in ('ImpGrav', 'Imponible', 'NoGraIva', 'ImpExe', 'Ice', 'Irbpnr'):
+                    tax_amount = tax.compute_all(line_discount_price_unit,
+                quantity=line.quantity, currency=currency, product=line.product_id, partner=partner, is_refund=move_type in ('out_refund', 'in_refund'))
+                    base = tax_amount['taxes'][0]['base']
+                    amount = tax_amount['taxes'][0]['amount']
+
                     impuestos['impuesto'].append(
                         OrderedDict([
-                            ('codigo', tax.codigo),
-                            ('codigoPorcentaje', tax.codigoporcentaje),
-                            ('tarifa', tax.porcentaje),
-                            ('baseImponible', '{:.2f}'.format(tax.base)),
-                            ('valor', '{:.2f}'.format(abs(tax.amount))),
+                            ('codigo', tax.tax_group_id.l10n_ec_electronic_code),
+                            ('codigoPorcentaje', tax.l10n_ec_electronic_code),
+                            ('tarifa', tax.amount),
+                            ('baseImponible', '{:.2f}'.format(base)),
+                            ('valor', '{:.2f}'.format(amount)),
                         ])
                     )
 
@@ -320,28 +347,10 @@ class AccountMove(models.Model):
                 ('descripcion', line.name),
                 ('cantidad', '{:.6f}'.format(line.quantity)),
                 ('precioUnitario', '{:.6f}'.format(line.price_unit)),
-                ('descuento', '{:.2f}'.format(line.price_discount)),
-                ('precioTotalSinImpuesto',
-                 '{:.2f}'.format(line.price_subtotal)),
+                ('descuento', '{:.2f}'.format(line.discount)),
+                ('precioTotalSinImpuesto', '{:.2f}'.format(line.price_subtotal)),
             ])
-
-            detAdicionales = line.get_detallesadicionales()
-
-            if detAdicionales:
-                detallesAdicionales = OrderedDict([
-                    ('detAdicional', []),
-                ])
-                for d in detAdicionales:
-                    detallesAdicionales['detAdicional'].append(OrderedDict([
-                        ('@nombre', d[0]),
-                        ('@valor', d[1]),
-                    ]))
-                detalle.update(
-                    OrderedDict([
-                        ('detallesAdicionales', detallesAdicionales),
-                    ])
-                )
-
+            totalDescuento+=line.discount
             detalle.update(
                 OrderedDict([
                     ('impuestos', impuestos),
@@ -350,7 +359,31 @@ class AccountMove(models.Model):
 
             detalles['detalle'].append(detalle)
 
-            factura_dict = OrderedDict([
+        tipoIdentificacionComprador = partner.l10n_latam_identification_type_id.electronic_code or '05'
+
+        if partner.vat == "9999999999999":
+            tipoIdentificacionComprador = "07"
+
+        infoFactura = OrderedDict([
+            ('fechaEmision', self.normalize_date_two(fechaemision)),
+            ('dirEstablecimiento', self.normalize(company.street)),
+            ('contribuyenteEspecial', company.is_special_taxpayer_number and company.special_taxpayer_number or '000'),
+            ('obligadoContabilidad', company.takes_accounting and 'SI' or 'NO'),
+            ('tipoIdentificacionComprador', tipoIdentificacionComprador),
+            ('guiaRemision', '000-000-000000000'),  # TODO
+            ('razonSocialComprador', self.normalize(partner.name)),
+            ('identificacionComprador', partner.vat),
+            ('direccionComprador', partner.street),
+            ('totalSinImpuestos', '{:.2f}'.format(self.amount_untaxed)),
+            ('totalDescuento', '{:.2f}'.format(totalDescuento)),
+            ('totalConImpuestos', totalConImpuestos),
+            ('propina', '{:.2f}'.format(self.get_propina())),
+            ('importeTotal', '{:.2f}'.format(self.amount_total)),
+            ('moneda', 'DOLAR'),
+            ('pagos', pagos),
+        ])
+
+        factura_dict = OrderedDict([
                 ('factura', OrderedDict([
                     ('@id', 'comprobante'),
                     ('@version', '1.1.0'),
@@ -377,15 +410,17 @@ class AccountMove(models.Model):
             ])
             )
 
-        return ambiente_id, comprobante_id, factura_dict, claveacceso, tipoemision
+        return ambiente_id,factura_dict, claveacceso, tipoemision
 
 
     def button_send_factura_electronica(self):
-        ambiente_id, comprobante_id, factura, claveacceso, tipoemision = self.get_factura_dict()
+        ambiente_id, factura, claveacceso, tipoemision = self.get_factura_dict()
+
         de_obj = self.env['account.edi.document']
         reference = 'account.invoice,%s' % self.id
+
         vals = de_obj.get_documento_electronico_dict(
-            ambiente_id, comprobante_id, factura, claveacceso, tipoemision, reference
+            ambiente_id, factura, claveacceso, tipoemision, reference
         )
         # La autorizacion de la factura es igual a la clave de acceso.
         self.autorizacion = claveacceso
@@ -424,7 +459,7 @@ class AccountMove(models.Model):
 
         autorizacion_id = self.r_autorizacion_id
         comprobante_id = self.r_comprobante_id
-        comprobante = comprobante_id.code
+        comprobante = comprobante_id.electronic_code
         establecimiento = self.estabretencion1
         puntoemision = self.ptoemiretencion1
         tipoemision = '1'  # offline siempre es normal.
@@ -599,12 +634,15 @@ class AccountMove(models.Model):
                     ('valor', '{:.2f}'.format(i.amount)),
                 ])
             )
+        tipoIdentificacionComprador = fiscal.identificacion_id.tpidcliente
+        if partner.vat == "9999999999999":
+            tipoIdentificacionComprador = "07"
 
         infoNotaCredito = OrderedDict([
             ('fechaEmision', self.normalize_date(fechaemision)),
             ('dirEstablecimiento', self.normalize(
                 autorizacion_id.direstablecimiento or company.street + company.street2)),
-            ('tipoIdentificacionComprador', fiscal.identificacion_id.tpidcliente),
+            ('tipoIdentificacionComprador', tipoIdentificacionComprador),
             ('razonSocialComprador', self.normalize(partner.name)),
             ('identificacionComprador', partner.vat),
             ('contribuyenteEspecial', company.contribuyenteespecial or '000'),

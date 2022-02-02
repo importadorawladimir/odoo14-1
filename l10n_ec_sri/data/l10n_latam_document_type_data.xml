@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<data>
+
+		<record id="ek_l10n_ec.ec_03" model="l10n_latam.document.type">
+			<field name="electronic_code">07</field>
+		</record>
+
+		<record id="ek_l10n_ec.ec_04" model="l10n_latam.document.type">
+			<field name="electronic_code">01</field>
+		</record>
+		
+		<record id="ek_l10n_ec.ec_06" model="l10n_latam.document.type">
+			<field name="electronic_code">01</field>
+		</record>
+
+		<record id="ek_l10n_ec.ec_07" model="l10n_latam.document.type">
+			<field name="electronic_code">06</field>
+		</record>
+
+	    <record id="ek_l10n_ec.ec_08" model="l10n_latam.document.type">
+			<field name="electronic_code">03</field>
+		</record>
+
+		<record id="ek_l10n_ec.ec_09" model="l10n_latam.document.type">
+			<field name="electronic_code">04</field>
+		</record>
+
+		<record id="ek_l10n_ec.ec_10" model="l10n_latam.document.type">
+			<field name="electronic_code">04</field>
+		</record>
+
+		<record id="ek_l10n_ec.ec_11" model="l10n_latam.document.type">
+			<field name="electronic_code">07</field>
+		</record>
+
+		<record id="ek_l10n_ec.ec_23" model="l10n_latam.document.type">
+			<field name="electronic_code">04</field>
+		</record>
+
+		<record id="ek_l10n_ec.ec_24" model="l10n_latam.document.type">
+			<field name="electronic_code">05</field>
+		</record>
+
+		<record id="ek_l10n_ec.ec_47" model="l10n_latam.document.type">
+			<field name="electronic_code">04</field>
+
+		</record>
+
+		<record id="ek_l10n_ec.ec_48" model="l10n_latam.document.type">
+			<field name="electronic_code">05</field>
+
+		</record>
+
+		<record id="ek_l10n_ec.ec_51" model="l10n_latam.document.type">
+			<field name="electronic_code">04</field>
+		</record>
+
+		<record id="ek_l10n_ec.ec_52" model="l10n_latam.document.type">
+			<field name="electronic_code">05</field>
+		</record>
+
+		<record id="ek_l10n_ec.ec_53" model="l10n_latam.document.type">
+			<field name="electronic_code">05</field>
+		</record>
+
+		<record id="ek_l10n_ec.ec_54" model="l10n_latam.document.type">
+			<field name="electronic_code">05</field>
+		</record>
+
+		<record id="ek_l10n_ec.ec_57" model="l10n_latam.document.type">
+			<field name="electronic_code">03</field>
+		</record>
+
+		<record id="ek_l10n_ec.ec_58" model="l10n_latam.document.type">
+			<field name="electronic_code">01</field>
+		</record>
+
+		<record id="ek_l10n_ec.ec_59" model="l10n_latam.document.type">
+			<field name="electronic_code">01</field>
+		</record>
+
+	</data>	
+</odoo>
