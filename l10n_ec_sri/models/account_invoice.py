@@ -131,7 +131,7 @@ class AccountMove(models.Model):
                     attachment_ids.append(attrs)
                 if doc.xml_file:
                     attrs = self.env['ir.attachment'].create({
-                        'name': '{0}.pdf'.format(clave),
+                        'name': '{0}.xml'.format(clave),
                         'datas': doc.xml_file,
                         'res_model': self._name,
                         'res_id': self.id,

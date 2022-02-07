@@ -436,22 +436,37 @@ class SriDocumentoElectronico(models.Model):
             ])
             comprobante = xml.sax.saxutils.unescape(xmltodict.unparse(_autorizacion))
 
-            pdf = self.env.ref('l10n_ec_sri.report_factura_electronica_id').sudo()._render_qweb_pdf([self.move_id.id])[
-                0]
 
             self.write({
                 'state': 'autorized',
                 'error': False,
                 'xml_file': base64.b64encode(comprobante.encode('utf-8')),
                 'xml_filename': ''.join([access_key, '.xml']),
-                'ride_filename': ''.join([access_key, '.pdf']),
-                'ride_file': base64.b64encode(pdf),
                 'fechaautorizacion': fields.Datetime.to_string(autorizacion.fechaAutorizacion),
             })
 
+            pdf = self.env.ref('l10n_ec_sri.report_factura_electronica_id').sudo()._render_qweb_pdf([self.move_id.id])[
+                0]
 
-            #if self.move_id:
-            #    self.move_id
+            self.write({
+                'ride_filename': ''.join([access_key, '.pdf']),
+                'ride_file': base64.b64encode(pdf)
+            })
+
+            self.env['ir.attachment'].create({
+                    'name': ''.join([access_key, '.pdf']),
+                    'datas': base64.b64encode(pdf),
+                    'res_model': 'account.move',
+                    'res_id': self.move_id.id,
+                    'type': 'binary'
+                })
+            self.env['ir.attachment'].create({
+                    'name': ''.join([access_key, '.xml']),
+                    'datas':  base64.b64encode(comprobante.encode('utf-8')),
+                    'res_model': 'account.move',
+                    'res_id': self.move_id.id,
+                    'type': 'binary'
+                })
 
             # Enviar correo si el documento es AUTORIZADO.
             '''try:
