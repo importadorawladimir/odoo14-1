@@ -200,7 +200,11 @@ class SriDocumentoElectronico(models.Model):
 
         ambiente_id, factura, claveacceso, tipoemision = move.get_factura_dict()
         reference = 'account.move,%s' % self.id
-        res.write(self.get_documento_electronico_dict(ambiente_id,factura,claveacceso, tipoemision, reference))
+
+        try:
+            res.write(self.get_documento_electronico_dict(ambiente_id,factura,claveacceso, tipoemision, reference))
+        except:
+            pass
 
         return res
 
