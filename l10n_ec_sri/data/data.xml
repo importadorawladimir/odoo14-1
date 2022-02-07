@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <record model="account.edi.document.queue"
-        id="documento_electronico_queue">
-        <field name="name">Documentos por procesar</field>
-    </record>
-
+    
     <!-- noupdate evita errores de actualización cuando un cron
          se está ejectutando -->
     <data>
-        <record model="ir.cron" id="cron_process_de_queue">
+        <record model="ir.cron" id="cron_process_email_electronic_document">
             <field name="name">Procesar cola de correos de documentos electrónicos</field>
             <field name="model_id" ref = "model_account_edi_document"/>
             <field name="state">code</field>
