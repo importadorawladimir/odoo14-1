@@ -11,6 +11,15 @@
                     <group>
                         <field name="firma_id"/>
                         <field name="ambiente_id"/>
+                        <field name="date"/>
+                        <field name="takes_accounting"/>
+                        <field name="agent_retention"/>
+                        <field name="ar_number_resolution" attrs="{'invisible': [('agent_retention', '=', False)], 'required': [('agent_retention', '=', True)]}"/>
+                        <field name="regime_micro"/>
+
+                        <field name="is_special_taxpayer_number"/>
+                        <field name="special_taxpayer_number" attrs="{'invisible': [('is_special_taxpayer_number', '=', False)], 'required': [('is_special_taxpayer_number', '=', True)]}"/>
+
                     </group>
                 </page>
             </xpath>

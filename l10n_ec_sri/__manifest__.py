@@ -10,7 +10,9 @@
     'depends': [
         'base',
         'account_edi',
+        'l10n_latam_base',
         'l10n_latam_invoice_document',
+        'ek_l10n_ec'
         #'stock_picking_invoice_link',
         #'partner_contact_tradename',
         #'account_invoice_discount_amount',
@@ -19,13 +21,18 @@
     'data': [
         'security/ir.model.access.csv',
         'data/ambiente.xml',
-        #'views/account_invoice.xml',
+        'views/account_tax_view.xml',
+        'views/l10n_latam_document_type_view.xml',
+        'views/account_invoice.xml',
         'views/res_company.xml',
-        #'views/sri.xml',
-        #'views/report_paper_format.xml',
-        #'views/account_invoice_report.xml',
-        #'data/invoice_action_data.xml',
+        'views/sri.xml',
+        'views/report_paper_format.xml',
+        'views/account_invoice_report.xml',
+        'data/invoice_action_template_mail_data.xml',
         'data/data.xml',
+        'data/l10n_latam_document_type_data.xml',
+        'data/l10n_latam_identification_type_data.xml',
+        'data/account_tax_group_data.xml'
     ],
     'demo': [],
     'test': [],

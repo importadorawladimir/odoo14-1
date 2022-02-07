@@ -8,17 +8,63 @@
 
     <!-- noupdate evita errores de actualización cuando un cron
          se está ejectutando -->
-    <data noupdate="1">
+    <data>
         <record model="ir.cron" id="cron_process_de_queue">
-            <field name="name">Procesar cola de documentos electrónicos</field>
-            <field name="model_id" ref = "model_account_edi_document_queue"/>
+            <field name="name">Procesar cola de correos de documentos electrónicos</field>
+            <field name="model_id" ref = "model_account_edi_document"/>
             <field name="state">code</field>
-            <field name="code">model.process_de_queue(True)</field>
+            <field name="code">model.cron_send_email_electronic_document(350)</field>
             <field name="interval_number">15</field>
             <field name="interval_type">minutes</field>
             <field name="numbercall">-1</field>
 
         </record>
+
+        <record model="ir.cron" id="cron_generate_bash_xml">
+            <field name="name">Firmar documentos eletronicos en batch</field>
+            <field name="model_id" ref = "model_account_edi_document"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_generate_bash_xml(100)</field>
+            <field name="interval_number">15</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+
+        </record>
+        <record model="ir.cron" id="cron_send_bash_xml">
+            <field name="name">Enviar documentos eletronicos en batch</field>
+            <field name="model_id" ref = "model_account_edi_document"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_send_bash_xml(100)</field>
+            <field name="interval_number">20</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+
+        </record>
+
+        <record model="ir.cron" id="cron_received_bash_auth">
+            <field name="name">Recibir documentos eletronicos autorizados en batch</field>
+            <field name="model_id" ref = "model_account_edi_document"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_received_bash_auth(300)</field>
+            <field name="interval_number">60</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+
+        </record>
+        <record model="ir.cron" id="cron_generate_bash_access_key">
+            <field name="name">Regenerar clave de acceso en batch</field>
+            <field name="model_id" ref = "model_account_edi_document"/>
+            <field name="state">code</field>
+            <field name="active" eval="False" />
+            <field name="code">model.cron_generate_bash_access_key()</field>
+            <field name="interval_number">20</field>
+            <field name="interval_type">weeks</field>
+            <field name="numbercall">-1</field>
+
+        </record>
+
+
+
     </data>
 
 </odoo>
