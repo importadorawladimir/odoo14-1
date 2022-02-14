@@ -445,14 +445,15 @@ class AccountMove(models.Model):
             detalles['detalle'].append(detalle)
 
         for key, total_tax in other_vat_zero.items():
-            totalConImpuestos['totalImpuesto'].append(OrderedDict([
-                ('codigo', total_tax.get('codigo')),
-                ('codigoPorcentaje', total_tax.get('codigoPorcentaje')),
-                ('descuentoAdicional', total_tax.get('descuentoAdicional')),  # TODO
-                ('baseImponible', '{:.2f}'.format(total_tax.get('baseImponible', 0.00))),
-                ('tarifa', total_tax.get('tarifa')),
-                ('valor', total_tax.get('valor')),
-            ]))
+            pass
+            #totalConImpuestos['totalImpuesto'].append(OrderedDict([
+            #    ('codigo', total_tax.get('codigo')),
+            #    ('codigoPorcentaje', total_tax.get('codigoPorcentaje')),
+            #    ('descuentoAdicional', total_tax.get('descuentoAdicional')),  # TODO
+            #    ('baseImponible', '{:.2f}'.format(total_tax.get('baseImponible', 0.00))),
+            #    ('tarifa', total_tax.get('tarifa')),
+            #    ('valor', total_tax.get('valor')),
+            #]))
         tipoIdentificacionComprador = partner.l10n_latam_identification_type_id.electronic_code or '05'
 
         if partner.vat == "9999999999999":
