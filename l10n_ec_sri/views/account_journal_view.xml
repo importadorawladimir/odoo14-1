@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit Form View to Modify it -->
+        <record id="account_journal_form_inherited_edocuemt" model="ir.ui.view">
+            <field name="name">account.journal.form.inherited.edocuemt</field>
+            <field name="model">account.journal</field>
+            <field name="inherit_id" ref="account_edi.view_account_journal_form_inherited"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//field[@name='edi_format_ids']" position="after">
+                    <!-- Add your fields or attributes here -->
+                    <field name="dir_establecimiento" attrs="{'invisible': [('edi_format_ids', '=', [])]}"/>
+                </xpath>
+
+            </field>
+        </record>
+
+    </data>
+</odoo>

@@ -167,6 +167,7 @@
                                      <span>
                                         <b>CLAVE DE ACCESO</b>
                                     </span>
+                                    <br/>
                                     <span t-esc="o.get_edi_docuemnt_access_key()" class="text-center"/>
                                     <t t-set="auth" t-value="o.get_edi_docuemnt_auth()" />
                                     <t t-if="auth">
@@ -174,7 +175,7 @@
                                             <b>Autorización:</b>
                                             <span t-field="auth.claveacceso"/>
                                         </span>
-
+                                        <br/>
                                         <span>
                                             <b>Fecha/Hora:</b>
                                             <span t-field="auth.fechaautorizacion"/>

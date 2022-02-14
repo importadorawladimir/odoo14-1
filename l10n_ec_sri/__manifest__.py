@@ -24,6 +24,7 @@
         'views/account_tax_view.xml',
         'views/l10n_latam_document_type_view.xml',
         'views/account_invoice.xml',
+        'views/account_journal_view.xml',
         'views/res_company.xml',
         'views/sri.xml',
         'views/report_paper_format.xml',

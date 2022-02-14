@@ -4,7 +4,7 @@
     <!-- noupdate evita errores de actualización cuando un cron
          se está ejectutando -->
     <data>
-        <record model="ir.cron" id="cron_process_email_electronic_document">
+         <record model="ir.cron" id="cron_process_email_electronic_sri">
             <field name="name">Procesar cola de correos de documentos electrónicos</field>
             <field name="model_id" ref = "model_account_edi_document"/>
             <field name="state">code</field>

@@ -108,14 +108,18 @@ class SriDocumentoElectronico(models.Model):
 
     @api.model
     def cron_generate_bash_xml(self, limit=1000):
-        docs = self.search([('state', '=', 'to_send'),('claveacceso','!=',False),('move_id.move_type','=','out_invoice')], limit=limit)
-        for rec in docs:
+        docs = self.search([('state', '=', 'to_send'),('claveacceso','!=',False),('move_id.move_type','in',['out_invoice'])], limit=limit)
+        for rec in docs: #,'out_refunde'
             move = rec.move_id
-            ambiente_id, factura, claveacceso, tipoemision = move.get_factura_dict()
-            reference = 'account.move,%s' % move.id
-            self.get_documento_electronico_dict(ambiente_id, factura, rec.claveacceso, tipoemision, reference)
 
-            rec.write({'state': 'sent'})
+            if move.move_type == 'out_invoice':
+                ambiente_id, factura, claveacceso, tipoemision = move.get_factura_dict()
+                reference = 'account.move,%s' % move.id
+                self.get_documento_electronico_dict(ambiente_id, factura, rec.claveacceso, tipoemision, reference)
+
+                rec.write({'state': 'sent'})
+            else:
+                pass
 
     @api.model
     def cron_generate_bash_access_key(self, limit=10000,ids=[]):
@@ -172,7 +176,12 @@ class SriDocumentoElectronico(models.Model):
     @api.model
     def cron_send_email_electronic_document(self, limit=50):
         for rec in self.search([('edi_format_id.code', '=', 'FESRI'), ('mail_send', '=', False), ('state', '=', 'autorized')], limit=limit):
-            rec.move_id.send_email_de()
+            try:
+                rec.move_id.send_email_de()
+                rec.write({'mail_send': True})
+
+            except Exception as e:
+                print(e)
 
 
 
@@ -307,7 +316,7 @@ class SriDocumentoElectronico(models.Model):
             return False
 
     def send_de_backend(self):
-        self.move_id.send_email_de()
+        #self.move_id.send_email_de()
         """
         Envía el documento electrónico desde el backend
         para evitar demoras en caso de que el SRI se encuentre
@@ -448,7 +457,6 @@ class SriDocumentoElectronico(models.Model):
                 'xml_filename': ''.join([access_key, '.xml']),
                 'fechaautorizacion': fields.Datetime.to_string(autorizacion.fechaAutorizacion),
             })
-
             pdf = self.env.ref('l10n_ec_sri.report_factura_electronica_id').sudo()._render_qweb_pdf([self.move_id.id])[
                 0]
 
