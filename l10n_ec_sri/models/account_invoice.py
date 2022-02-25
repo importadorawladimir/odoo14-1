@@ -6,7 +6,7 @@ from datetime import datetime
 import pytz, logging
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
-
+import base64
 
 class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
@@ -40,6 +40,18 @@ class AccountMove(models.Model):
         ))
 
         return res
+
+    def get_edi_docuemnt_auth(self):
+        self.ensure_one()
+        docs = self.edi_document_ids.filtered(lambda doc: doc.state == 'autorized')
+
+        return len(docs) and docs[0] or False
+
+    def get_edi_docuemnt_access_key(self):
+        self.ensure_one()
+        docs = self.edi_document_ids.filtered(lambda doc: doc.state != 'cancelled')
+
+        return len(docs) and docs[0].claveacceso or False
 
     def normalize_date(self, date, fmt='dmy'):
         if fmt == 'dmy':
@@ -80,38 +92,96 @@ class AccountMove(models.Model):
 
 
     def get_email_template(self):
-        if self.type == 'out_invoice':
+        if self.move_type == 'out_invoice':
             template = self.env.ref(
                 'l10n_ec_sri.email_template_factura_electronica', False)
-        elif self.type == 'in_invoice':
+        elif self.move_type == 'in_invoice':
             template = self.env.ref(
                 'l10n_ec_sri.email_template_retencion_electronica', False)
-        elif self.type == 'out_refund':
+        elif self.move_type == 'out_refund':
             template = self.env.ref(
                 'l10n_ec_sri.email_template_nota_de_credito_electronica', False)
         return template
 
+    def _prepare_mail_context(self):
+        template = self.get_email_template()
+        attachment_ids = []
+        doc = self.get_edi_docuemnt_auth()
+        clave = doc and doc.claveacceso or self.name
+        search = []
+
+        search.append(eval("('res_model', '=', '" + self._name + "')"))
+        search.append(eval("('res_id', '=', " + str(self.id) + ")"))
+        search.append(eval("('name', 'in', ['" + clave + ".pdf','" + clave + ".xml'" + "])"))
+
+        attachments = self.env['ir.attachment'].search(search)
+        if len(attachments):
+            for at in attachments:
+                attachment_ids.append(at.id)
+        else:
+            if doc and (doc.xml_file or doc.ride_file):
+                if doc.ride_file:
+                    attrs = self.env['ir.attachment'].create({
+                        'name': '{0}.pdf'.format(clave),
+                        'datas': doc.ride_file,
+                        'res_model': self._name,
+                        'res_id': self.id,
+                        'type': 'binary'
+                    })
+                    attachment_ids.append(attrs)
+                if doc.xml_file:
+                    attrs = self.env['ir.attachment'].create({
+                        'name': '{0}.xml'.format(clave),
+                        'datas': doc.xml_file,
+                        'res_model': self._name,
+                        'res_id': self.id,
+                        'type': 'binary'
+                    })
+                    attachment_ids.append(attrs)
+            else:
+
+                pdf = \
+                    self.env.ref('l10n_ec_sri.report_factura_electronica_id').sudo()._render_qweb_pdf(
+                        [self.id])[
+                        0]
+
+                attrs = self.env['ir.attachment'].create({
+                    'name': '{0}.pdf'.format(clave),
+                    'datas': base64.b64encode(pdf),
+                    'res_model': self._name,
+                    'res_id': self.id,
+                    'type': 'binary'
+                })
+
+                attachment_ids.append(attrs.id)
+
+
+        ctx = dict(
+            default_model='account.move',
+            default_res_id=self.id,
+            default_use_template=bool(template),
+            default_template_id=template and template.id or False,
+            default_composition_mode='comment',
+            mark_invoice_as_sent=True,
+            default_attachment_ids=[(6, 0, attachment_ids)]
+        )
+
+        return ctx
 
     def action_invoice_sent(self):
         """ Open a window to compose an email, with the edi invoice template
            message loaded by default
         """
-        if self.tipoem == 'E':
+
+        if len(self.journal_id.edi_format_ids.filtered(lambda format: format.code == 'FESRI')):
             self.ensure_one()
 
             # Seleccionamos la plantilla de acuerdo al tipo.
-            template = self.get_email_template()
 
             compose_form = self.env.ref(
                 'mail.email_compose_message_wizard_form', False)
-            ctx = dict(
-                default_model='account.invoice',
-                default_res_id=self.id,
-                default_use_template=bool(template),
-                default_template_id=template and template.id or False,
-                default_composition_mode='comment',
-                mark_invoice_as_sent=True,
-            )
+
+
             return {
                 'name': _('Compose Email'),
                 'type': 'ir.actions.act_window',
@@ -121,7 +191,7 @@ class AccountMove(models.Model):
                 'views': [(compose_form.id, 'form')],
                 'view_id': compose_form.id,
                 'target': 'new',
-                'context': ctx,
+                'context': self._prepare_mail_context(),
             }
         else:
             return super(AccountMove, self).action_invoice_sent()
@@ -181,7 +251,7 @@ class AccountMove(models.Model):
             ('tipoEmision', tipoemision),
             ('razonSocial', self.normalize(company.name)),
             ('nombreComercial', self.normalize(company.company_registry or company.name)),
-            ('ruc', company.vat[2:15]),
+            ('ruc', len(company.vat) > 13 and company.vat[2:15] or company.vat),
             ('claveAcceso', claveacceso),
             ('codDoc', self.l10n_latam_document_type_id.electronic_code),
             ('estab', establecimiento),
@@ -199,15 +269,12 @@ class AccountMove(models.Model):
             if number_resolution_int > 0:
                 agenteRetencion = number_resolution_int
                 infoTributaria.update({'agenteRetencion': agenteRetencion})
-                #infoTributaria.append(OrderedDict([('agenteRetencion', agenteRetencion)]))
-            #else:
-            #    raise Warning(
-            #        u"Compania Agente Retencion Error en el numero de Resolucion, el campo final debe de ser numérico\n "
-            #        u"[ %s ]" % company.ar_number_resolution)
+
         if company.regime_micro:
             infoTributaria.update({'regimenMicroempresas': u'CONTRIBUYENTE RÉGIMEN MICROEMPRESAS'})
-            #infoTributaria.append(OrderedDict([('regimenMicroempresas', u'CONTRIBUYENTE RÉGIMEN MICROEMPRESAS')]))
 
+        if company.regime_rimpe:
+            infoTributaria.update({'contribuyenteRimpe': u'CONTRIBUYENTE RÉGIMEN RIMPE'})
 
         return infoTributaria
 
@@ -251,7 +318,7 @@ class AccountMove(models.Model):
         company = self.company_id
         #company_fiscal = company.partner_id.property_account_position_id
         move_type = self.move_type
-        ruc = company.vat[2:15]
+        ruc = len(company.vat) > 13 and company.vat[2:15] or company.vat
         currency = self.journal_id.currency_id
 
         if ambiente_id.ambiente == '1':
@@ -298,6 +365,8 @@ class AccountMove(models.Model):
                     ('tarifa', '{:.2f}'.format(tax.tax_line_id.amount)),
                     ('valor', '{:.2f}'.format(abs(tax.price_total))),
                 ])
+
+
         pagos = OrderedDict([
             ('pago', []),
         ])
@@ -315,11 +384,12 @@ class AccountMove(models.Model):
             ('detalle', []),
         ])
         totalDescuento = 0.00
+        other_vat_zero = {}
         for line in self.invoice_line_ids:
             impuestos = OrderedDict([
                 ('impuesto', []),
             ])
-            #line_id | tax_id | base | amount | group
+
             for tax in line.tax_ids:
                 if tax.tax_group_id and tax.tax_group_id.l10n_ec_type in ('vat12', 'vat14', 'zero_vat', 'not_charged_vat', 'exempt_vat', 'ice', 'irbpnr'):
                     # Compute 'price_subtotal'.
@@ -341,16 +411,31 @@ class AccountMove(models.Model):
                         ])
                     )
 
+                    if tax.tax_group_id and tax.tax_group_id.l10n_ec_type in ('zero_vat', 'not_charged_vat', 'exempt_vat'):
+                        if not tax.tax_group_id.l10n_ec_type in other_vat_zero:
+                            other_vat_zero[tax.tax_group_id.l10n_ec_type] = {
+                                'codigo': tax.tax_group_id.l10n_ec_electronic_code,
+                                'codigoPorcentaje': tax.l10n_ec_electronic_code,
+                                'descuentoAdicional': '{:.2f}'.format(0),
+                                'baseImponible': 0.00,
+                                'tarifa': '{:.2f}'.format(0),
+                                'valor': '{:.2f}'.format(0),
+                            }
+                        other_vat_zero[tax.tax_group_id.l10n_ec_type]['baseImponible'] +=base
+
             detalle = OrderedDict([
                 ('codigoPrincipal', line.product_id.default_code),
                 ('codigoAuxiliar', line.product_id.barcode),
-                ('descripcion', line.name),
+                ('descripcion', str(self.normalize(line.name)).replace("'","")),
                 ('cantidad', '{:.6f}'.format(line.quantity)),
                 ('precioUnitario', '{:.6f}'.format(line.price_unit)),
                 ('descuento', '{:.2f}'.format(line.discount)),
                 ('precioTotalSinImpuesto', '{:.2f}'.format(line.price_subtotal)),
             ])
             totalDescuento+=line.discount
+
+
+
             detalle.update(
                 OrderedDict([
                     ('impuestos', impuestos),
@@ -359,6 +444,16 @@ class AccountMove(models.Model):
 
             detalles['detalle'].append(detalle)
 
+        for key, total_tax in other_vat_zero.items():
+            pass
+            #totalConImpuestos['totalImpuesto'].append(OrderedDict([
+            #    ('codigo', total_tax.get('codigo')),
+            #    ('codigoPorcentaje', total_tax.get('codigoPorcentaje')),
+            #    ('descuentoAdicional', total_tax.get('descuentoAdicional')),  # TODO
+            #    ('baseImponible', '{:.2f}'.format(total_tax.get('baseImponible', 0.00))),
+            #    ('tarifa', total_tax.get('tarifa')),
+            #    ('valor', total_tax.get('valor')),
+            #]))
         tipoIdentificacionComprador = partner.l10n_latam_identification_type_id.electronic_code or '05'
 
         if partner.vat == "9999999999999":
@@ -366,7 +461,7 @@ class AccountMove(models.Model):
 
         infoFactura = OrderedDict([
             ('fechaEmision', self.normalize_date_two(fechaemision)),
-            ('dirEstablecimiento', self.normalize(company.street)),
+            ('dirEstablecimiento', self.journal_id.dir_establecimiento and self.normalize(self.journal_id.dir_establecimiento) or self.normalize(company.street)),
             ('contribuyenteEspecial', company.is_special_taxpayer_number and company.special_taxpayer_number or '000'),
             ('obligadoContabilidad', company.takes_accounting and 'SI' or 'NO'),
             ('tipoIdentificacionComprador', tipoIdentificacionComprador),
@@ -382,6 +477,9 @@ class AccountMove(models.Model):
             ('moneda', 'DOLAR'),
             ('pagos', pagos),
         ])
+
+        if infoFactura.get('contribuyenteEspecial','000') == '000':
+            infoFactura.pop('contribuyenteEspecial')
 
         factura_dict = OrderedDict([
                 ('factura', OrderedDict([
@@ -449,7 +547,7 @@ class AccountMove(models.Model):
         ambiente_id = self.env.user.company_id.ambiente_id
         company = self.env.user.company_id
         company_fiscal = company.partner_id.property_account_position_id
-        ruc = company.vat
+        ruc = len(company.vat) > 13 and company.vat[2:15] or company.vat
 
         if ambiente_id.ambiente == '1':
             # Si el ambiente es de pruebas enviamos siempre la fecha actual.
@@ -566,9 +664,16 @@ class AccountMove(models.Model):
 
 
     def send_email_de(self):
+
+
         self.ensure_one()
         template = self.get_email_template()
-        template.send_mail(self.ids[0], force_send=True)
+
+        template.with_context(self._prepare_mail_context()).send_mail(self.ids[0], force_send=True)
+
+        for doc in self.edi_document_ids:
+            doc.write({'mail_send': True})
+
         return True
 
 
@@ -579,31 +684,44 @@ class AccountMove(models.Model):
          nota_credito_dict: OrderedDict,
          claveacceso: string,
          tipoemision: string,
+
         """
-        ambiente_id = self.env.user.company_id.ambiente_id
-        company = self.env.user.company_id
-        company_fiscal = company.partner_id.property_account_position_id
-        ruc = company.vat
+        ambiente_id = self.company_id.ambiente_id
+        company = self.company_id
+        #company_fiscal = company.partner_id.property_account_position_id
+        move_type = self.move_type
+        ruc = len(company.vat) > 13 and company.vat[2:15] or company.vat
+        currency = self.journal_id.currency_id
+
         if ambiente_id.ambiente == '1':
             # Si el ambiente es de pruebas enviamos siempre la fecha actual.
             fechaemision = fields.Date.context_today(self)
         else:
-            fechaemision = self.date_invoice
+            fechaemision = self.invoice_date
 
-        autorizacion_id = self.autorizacion_id
-        comprobante_id = self.comprobante_id
-        comprobante = comprobante_id.code
-        establecimiento = self.establecimiento
-        puntoemision = self.puntoemision
+
         tipoemision = '1'  # offline siempre es normal.
-        secuencial = self.secuencial.zfill(9)
-        numdocsustento = establecimiento + puntoemision + secuencial
         partner = self.partner_id
-        fiscal = partner.property_account_position_id
-        de_obj = self.env['account.edi.document']
-        claveacceso = de_obj.get_claveacceso(
-            fechaemision, comprobante, ruc, ambiente_id,
-            establecimiento, puntoemision, secuencial)
+        number = self.l10n_latam_document_number
+
+        establecimiento = number[0:3]
+        puntoemision = number[3:6]
+        secuencial = number[6:15]
+
+        de = self.env['account.edi.document']
+
+
+        claveacceso = de.get_claveacceso(
+            fechaemision,
+            self.l10n_latam_document_type_id.electronic_code,
+            ruc,
+            company.ambiente_id,
+            number[0:3],
+            number[3:6],
+            number[6:15],
+            )
+
+        infoTributaria = self.get_infotributaria_dict(ambiente_id, tipoemision, company,claveacceso)
 
         docmodificado = self.origin_invoice_ids
         numdocmodificado = '-'.join([
@@ -615,10 +733,6 @@ class AccountMove(models.Model):
         if len(docmodificado) != 1:
             raise UserError(_("Debe tener un documento modificado."))
 
-        infoTributaria = self.get_infotributaria_dict(
-            ambiente_id, tipoemision, company, ruc,
-            claveacceso, comprobante, establecimiento,
-            puntoemision, secuencial)
 
         totalConImpuestos = OrderedDict([
             ('totalImpuesto', []),
@@ -684,7 +798,7 @@ class AccountMove(models.Model):
             detalle = OrderedDict([
                 ('codigoInterno', line.product_id.default_code),
                 ('codigoAdicional', line.product_id.barcode),
-                ('descripcion', line.name),
+                ('descripcion', str(self.normalize(line.name)).replace("'","")),
                 ('cantidad', '{:.6f}'.format(line.quantity)),
                 ('precioUnitario', '{:.6f}'.format(line.price_unit)),
                 ('descuento', '{:.2f}'.format(line.price_discount)),

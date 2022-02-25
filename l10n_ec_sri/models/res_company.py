@@ -16,6 +16,7 @@ class ResCompany(models.Model):
     ar_number_resolution = fields.Char(u'Número de Resolución', help=u"Colocar numero completo\n "
                                                                       u"Sistema selecciona sección que necesita para xml", )
     regime_micro = fields.Boolean(u'Regimen Microempresas?', default=False)
+    regime_rimpe = fields.Boolean(u'Regimen Rimpe?', default=False)
 
     is_special_taxpayer_number = fields.Boolean('contribuyente especial?', default=False)
     special_taxpayer_number = fields.Char(

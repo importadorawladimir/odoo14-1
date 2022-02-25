@@ -108,14 +108,18 @@ class SriDocumentoElectronico(models.Model):
 
     @api.model
     def cron_generate_bash_xml(self, limit=1000):
-        docs = self.search([('state', '=', 'to_send'),('claveacceso','!=',False),('move_id.move_type','=','out_invoice')], limit=limit)
-        for rec in docs:
+        docs = self.search([('state', '=', 'to_send'),('claveacceso','!=',False),('move_id.move_type','in',['out_invoice'])], limit=limit)
+        for rec in docs: #,'out_refunde'
             move = rec.move_id
-            ambiente_id, factura, claveacceso, tipoemision = move.get_factura_dict()
-            reference = 'account.move,%s' % move.id
-            self.get_documento_electronico_dict(ambiente_id, factura, rec.claveacceso, tipoemision, reference)
 
-            rec.write({'state': 'sent'})
+            if move.move_type == 'out_invoice':
+                ambiente_id, factura, claveacceso, tipoemision = move.get_factura_dict()
+                reference = 'account.move,%s' % move.id
+                self.get_documento_electronico_dict(ambiente_id, factura, rec.claveacceso, tipoemision, reference)
+
+                rec.write({'state': 'sent'})
+            else:
+                pass
 
     @api.model
     def cron_generate_bash_access_key(self, limit=10000,ids=[]):
@@ -172,10 +176,12 @@ class SriDocumentoElectronico(models.Model):
     @api.model
     def cron_send_email_electronic_document(self, limit=50):
         for rec in self.search([('edi_format_id.code', '=', 'FESRI'), ('mail_send', '=', False), ('state', '=', 'autorized')], limit=limit):
-            #rec.move_id.send_email_de()
-            
-            rec.write({'mail_send': True})
+            try:
+                rec.move_id.send_email_de()
+                rec.write({'mail_send': True})
 
+            except Exception as e:
+                print(e)
 
 
 
@@ -203,7 +209,11 @@ class SriDocumentoElectronico(models.Model):
 
         ambiente_id, factura, claveacceso, tipoemision = move.get_factura_dict()
         reference = 'account.move,%s' % self.id
-        res.write(self.get_documento_electronico_dict(ambiente_id,factura,claveacceso, tipoemision, reference))
+
+        try:
+            res.write(self.get_documento_electronico_dict(ambiente_id,factura,claveacceso, tipoemision, reference))
+        except:
+            pass
 
         return res
 
@@ -306,12 +316,14 @@ class SriDocumentoElectronico(models.Model):
             return False
 
     def send_de_backend(self):
+        #self.move_id.send_email_de()
         """
         Envía el documento electrónico desde el backend
         para evitar demoras en caso de que el SRI se encuentre
         fuera de línea.
 
         """
+
         xml = False
         ambiente_id = self.env.user.company_id.ambiente_id
         firma = self.env.user.company_id.firma_id
@@ -372,8 +384,8 @@ class SriDocumentoElectronico(models.Model):
         result = client.service.validarComprobante(buffer_xml.decode())
 
         errores = []
-        logging.info("<<RESULTADO SRI>>")
-        logging.info(result)
+        #logging.info("<<RESULTADO SRI>>")
+        #logging.info(result)
 
         if hasattr(result, "estado") and result.estado == 'RECIBIDA':
             return 'received' , ', '.join(errores)
@@ -436,6 +448,8 @@ class SriDocumentoElectronico(models.Model):
                 ]))
             ])
             comprobante = xml.sax.saxutils.unescape(xmltodict.unparse(_autorizacion))
+
+
             self.write({
                 'state': 'autorized',
                 'error': False,
@@ -443,6 +457,28 @@ class SriDocumentoElectronico(models.Model):
                 'xml_filename': ''.join([access_key, '.xml']),
                 'fechaautorizacion': fields.Datetime.to_string(autorizacion.fechaAutorizacion),
             })
+            pdf = self.env.ref('l10n_ec_sri.report_factura_electronica_id').sudo()._render_qweb_pdf([self.move_id.id])[
+                0]
+
+            self.write({
+                'ride_filename': ''.join([access_key, '.pdf']),
+                'ride_file': base64.b64encode(pdf)
+            })
+
+            self.env['ir.attachment'].create({
+                    'name': ''.join([access_key, '.pdf']),
+                    'datas': base64.b64encode(pdf),
+                    'res_model': 'account.move',
+                    'res_id': self.move_id.id,
+                    'type': 'binary'
+                })
+            self.env['ir.attachment'].create({
+                    'name': ''.join([access_key, '.xml']),
+                    'datas':  base64.b64encode(comprobante.encode('utf-8')),
+                    'res_model': 'account.move',
+                    'res_id': self.move_id.id,
+                    'type': 'binary'
+                })
 
             # Enviar correo si el documento es AUTORIZADO.
             '''try:
@@ -603,10 +639,19 @@ class SriDocumentoElectronico(models.Model):
     )
 
     xml_file = fields.Binary('Archivo XML', attachment=True, readonly=True, )
-    xml_filename = fields.Char('Filename', )
+    xml_filename = fields.Char('Archivo XML', )
+
+    ride_file = fields.Binary('RIDE', attachment=True, readonly=True, )
+    ride_filename = fields.Char('RIDE', )
+
+    l10n_latam_document_type_id = fields.Many2one('l10n_latam.document.type', 'Tipo de Documento', ondelete='cascade',
+                                                  related="move_id.l10n_latam_document_type_id", readonly=True, store=True)
+
     mail_send = fields.Boolean(
         string='Correo Enviado?',
         required=False)
+
+
 
 class SriDocumentosElectronicosQueue(models.Model):
     _name = 'account.edi.document.queue'

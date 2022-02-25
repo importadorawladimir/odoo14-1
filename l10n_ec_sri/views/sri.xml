@@ -4,98 +4,118 @@
     <menuitem
         id="menu_documentos_electronicos"
         name="Documentos electronicos"
-        parent="l10n_ec_sri.menu_sri"
+        parent="account.menu_finance_entries"
         sequence="20"
         />
 
     <record id="documento_electronico_form_view" model="ir.ui.view">
-        <field name="name">SRI documento electronico form view</field>
-        <field name="model">l10n_ec_sri.documento.electronico</field>
+        <field name="name">SRI_documento_electronico_form_view</field>
+        <field name="model">account.edi.document</field>
         <field name="arch" type="xml">
-            <form>
+            <form edit="0" create="0" delete="0">
                 <header>
                     <button
-                        attrs="{'invisible':[('estado', 'not in', ('RECIBIDA','EN PROCESO'))]}"
+                        attrs="{'invisible':[('state', 'not in', ('received','in_process'))]}"
                         name="receive_de_offline"
                         string="VERIFICAR RESPUESTA"
                         type="object"/>
                     <button
-                        attrs="{'invisible':[('estado', '!=', 'NO ENVIADO')]}"
+                        attrs="{'invisible':[('state', '!=', 'to_send')]}"
                         name="send_de_backend"
                         string="ENVIAR DOCUMENTO"
                         type="object"/>
-                    <field name="estado" widget="statusbar"/>
+                    <field name="state" widget="statusbar" statusbar_visible="to_send,sent,cancelled,received,in_process,return,autorized"/>
                 </header>
                 <sheet>
                     <group>
-                        <field name="reference"/>
-                        <field name="comprobante_id"/>
-                        <field name="tipoemision"/>
-                        <field name="ambiente"/>
-                        <field name="claveacceso"/>
-                        <field name="barcode128" widget="image"/>
-                        <field name="fechaautorizacion"/>
-                        <field name="mensajes"/>
-                        <field name="xml_file" filename="xml_filename"/>
+                        <group>
+                            <field name="move_id"/>
+                            <field name="tipoemision"/>
+                            <field name="ambiente"/>
+                        </group>
+                        <group>
+                            <field name="claveacceso"/>
+                            <field name="fechaautorizacion"/>
+                            <field name="edi_format_id"/>
+                        </group>
                     </group>
-                </sheet>
-            </form>
-        </field>
-    </record>
-    <record id="documento_electronico_queue_form_view" model="ir.ui.view">
-        <field name="name">documento.electronico.queue.form.view</field>
-        <field name="model">l10n_ec_sri.documento.electronico.queue</field>
-        <field name="arch" type="xml">
-            <form string="Documento electronico queue">
-                <header>
-                    <button name="process_de_queue" string="PROCESAR DOCUMENTO ELECTRÓNICOS" type="object"/>
-                </header>
-                <sheet>
-                    <group name="queue_lines" string="Queue lines">
-                        <field name="queue_line_ids" nolabel="1" readonly="1">
-                            <tree>
-                                <field name="create_date"/>
-                                <field name="reference"/>
-                                <field name="documento_electronico_id"/>
-                                <field name="sent"/>
-                                <field name="estado"/>
-                            </tree>
-                            <form>
-                                <field name="reference"/>
-                                <field name="documento_electronico_id"/>
-                                <field name="sent"/>
-                                <field name="estado"/>
-                            </form>
-                        </field>
+                    <group col="4" string="Mensaje" attrs="{'invisible':[('error','=',False)]}">
+                         <field name="error"/>
+                    </group>
+                    <group col="4" string="Archivos" attrs="{'invisible':[('xml_file','=',False),('ride_file','=',False)]}">
+                         <field name="xml_file" filename="xml_filename"/>
+                        <field name="ride_file" filename="ride_filename"/>
                     </group>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <record id="documento_electronico_queue_tree_view" model="ir.ui.view">
-        <field name="name">documento.electronico.queue.tree.view</field>
-        <field name="model">l10n_ec_sri.documento.electronico.queue</field>
+     <record id="documento_electronico_tree_view" model="ir.ui.view">
+        <field name="name">SRI_documento_electronico_tree_view</field>
+        <field name="model">account.edi.document</field>
         <field name="arch" type="xml">
-            <tree string="Documento electronico" create="0" edit="0" delete="0">
-                <field name="name"/>
+            <tree string="Documento electronico" create="0" delete="0">
+                <field name="move_id"/>
+                <field name="l10n_latam_document_type_id"/>
+                <field name="tipoemision"/>
+                <field name="ambiente"/>
+                <field name="claveacceso"/>
+                <field name="error"/>
+                <field name="state"/>
             </tree>
         </field>
     </record>
-
-    <record id="action_documento_electronico_queue" model="ir.actions.act_window">
-        <field name="name">Documento electronico queue</field>
-        <field name="res_model">l10n_ec_sri.documento.electronico.queue</field>
-        <field name="view_type">form</field>
-        <field name="view_mode">tree,form</field>
+    <record id="documento_electronico_search_view" model="ir.ui.view">
+       <field name="name">SRI_documento_electronico_search_view</field>
+       <field name="model">account.edi.document</field>
+        <field name="arch" type="xml">
+            <search string="Search">
+                <field name="move_id"/>
+                <field name="tipoemision"/>
+                <field name="ambiente"/>
+                <field name="claveacceso"/>
+                <field name="state"/>
+                <filter string="Ambiente" name="ambiente" domain="[]" context="{'group_by': 'ambiente'}"/>
+                <filter string="Estado" name="state" domain="[]" context="{'group_by': 'state'}"/>
+                <filter string="Tipo de Documento" name="state" domain="[]" context="{'group_by': 'l10n_latam_document_type_id'}"/>
+            </search>
+       </field>
     </record>
+
+    <record id="action_documento_electronico" model="ir.actions.act_window">
+        <field name="name">Consola de Documentos Electrónicos</field>
+        <field name="res_model">account.edi.document</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="documento_electronico_search_view"/>
+        <field name="view_id" ref="documento_electronico_tree_view"/>
+        <field name="domain">[('edi_format_id.code', '=', 'FESRI'),('state','!=', False)]</field>
+    </record>
+
 
     <menuitem
         id="menu_documento_electronico_queue"
-        name="Documento electronico queue"
+        name="Consola de Documentos Electrónicos"
         parent="menu_documentos_electronicos"
         sequence="100"
-        action="action_documento_electronico_queue"
+        action="action_documento_electronico"
+        />
+
+    <record id="action_documento_electronico_send" model="ir.actions.act_window">
+        <field name="name">Consola de Correos Electrónicos</field>
+        <field name="res_model">account.edi.document</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="documento_electronico_search_view"/>
+        <field name="view_id" ref="documento_electronico_tree_view"/>
+        <field name="domain">[('edi_format_id.code', '=', 'FESRI'),('mail_send','=',False),('state','=','autorized')]</field>
+    </record>
+
+
+    <menuitem
+        id="menu_documento_electronico_queue_send"
+        parent="menu_documentos_electronicos"
+        sequence="101"
+        action="action_documento_electronico_send"
         />
 
 </odoo>
