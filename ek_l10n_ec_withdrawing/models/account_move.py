@@ -7,10 +7,33 @@ from odoo import api, fields, models, _
 from odoo.exceptions import RedirectWarning, UserError, ValidationError, AccessError
 import time
 
+class AccountAtsSustento(models.Model):
+    _name = 'account.ats.sustento'
+    _description = 'Sustento del Comprobante'
+
+    def name_get(self):
+        return [(record.id, '%s - %s' % (record.code,record.type)) for record in self]
+
+
+    #ek_l10n_ec
+    code = fields.Char(u'Código', size=2, required=True)
+    type = fields.Char('Tipo de Sustento', size=150, required=True)
+    account_ats_doc_ids = fields.Many2many("l10n_latam.document.type", "account_ats_doc_rel", "account_ats_sustento_id",
+                                           "account_ats_doc_id", string="Tipos Comprobantes")
+
 class AccountMove(models.Model):
     _inherit = 'account.move'
     retention_id = fields.Many2one('account.retention', string='Doc. Retención', copy=False)
 
+    l10n_latam_document_auth = fields.Char(
+        string=u'Número de Autorización', readonly=True, states={'draft': [('readonly', False)]})
+
+    l10n_latam_document_sustento = fields.Many2one(
+        comodel_name='account.ats.sustento',
+        string='Sustento',
+        required=False)
+
+    l10n_latam_document_sustento_id = fields.Many2one('account.move', string='Doc. Sustento', copy=False)
 
     def action_post(self):
         for isec in self:

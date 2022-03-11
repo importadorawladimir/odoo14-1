@@ -20,10 +20,13 @@ Authors:
         'l10n_latam_invoice_document'
     ],   
     'data': [
+        'data/account_ats_sustento.xml',
         'views/account_retention_view.xml',
         'views/account_move_view.xml',
         'views/account_journal_view.xml',
         'views/account_retention_client_view.xml',
+        'views/account_ats_sustento_view.xml',
+        'wizards/account_move_reversal_view.xml',
         'security/ir.model.access.csv',
         'security/l10n_ec_withdrawing_security.xml'
     ],
