@@ -68,20 +68,12 @@
                             name="%(action_account_check_action_wizard)d" type="action" string="Devolver a Cliente"
                             attrs="{'invisible': ['|', ('state', '!=', 'holding'), ('type', '!=', 'third_check')]}"
                             help="Creará un borrador de nota de débito para el cliente y cambiará el estado del cheque O anulara el voucher ."/>
-<<<<<<< HEAD
                     <!--AHORA SE REALIZA DESDE ESTRACTO-->
                     <!--                    <button context="{'default_action_type': 'bank_debit'}"-->
                     <!--                            name="%(action_account_check_action_wizard)d" type="action" string="Debitar" states="handed"-->
                     <!--                            help="Creará una entrada de diario de la cuenta de cheques diferida a la cuenta bancaria y cambiará el estado del cheque."/>-->
                     <!--                    -->
 
-=======
-<!--AHORA SE REALIZA DESDE ESTRACTO-->
-<!--                    <button context="{'default_action_type': 'bank_debit'}"-->
-<!--                            name="%(action_account_check_action_wizard)d" type="action" string="Debitar" states="handed"-->
-<!--                            help="Creará una entrada de diario de la cuenta de cheques diferida a la cuenta bancaria y cambiará el estado del cheque."/>-->
-<!--                    -->
->>>>>>> f6f0b0cee18b6b1a8097b4979bf989f01cd9e6e0
                     <!--button context="{'default_action_type': 'reject'}" name="%(action_account_check_action_wizard)d"
                     type="action" string="Retorno de Proveedor/Rechazo"
                     states="handed" help="It will create a draft debit note from supplier and change check state"/-->
