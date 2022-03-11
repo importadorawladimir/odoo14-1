@@ -972,9 +972,14 @@ class AccountCheck(models.Model):
             '''
             operation = self._get_operation(self.state, True)
             if operation.origin._name == 'account.payment':
+<<<<<<< HEAD
                 operation.origin.sudo().action_draft()
                 operation.origin.sudo().action_cancel()
             self.write({'state': 'rejected'})
+=======
+                operation.sudo().cancel_voucher()
+
+>>>>>>> f6f0b0cee18b6b1a8097b4979bf989f01cd9e6e0
 
     def action_create_debit_note(
             self, operation, partner_type, partner, account):

@@ -26,6 +26,7 @@ class PosOrder(models.Model):
 
 			if config:
 				orders = self.search([('partner_id', '!=', False),
+									  ('amount_total', '>', 0),
 									  ('state', 'in', ['paid']),
 									  ('is_invoiced', '=', False),
 									  ('date_order', '>=', date_init),
@@ -33,6 +34,7 @@ class PosOrder(models.Model):
 									  ('session_id.config_id', '=', config)], limit=limit, order="date_order asc")
 			else:
 				orders = self.search([('partner_id', '!=', False),
+									  ('amount_total', '>', 0),
 									  ('state', 'in', ['paid']),
 									  ('is_invoiced', '=', False),
 									  ('date_order', '>=', date_init),
@@ -40,11 +42,13 @@ class PosOrder(models.Model):
 		else:
 			if config:
 				orders = self.search([('partner_id', '!=', False),
+									  ('amount_total', '>', 0),
 									  ('state', 'in', ['paid']),
 									  ('is_invoiced', '=', False),
 									  ('session_id.config_id', '=', config)], limit=limit)
 			else:
 				orders = self.search([('partner_id', '!=', False),
+									  ('amount_total', '>',0),
 									  ('state', 'in', ['paid']),
 									  ('is_invoiced', '=', False),], limit=limit, order="date_order asc")
 
