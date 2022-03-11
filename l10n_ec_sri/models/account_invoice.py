@@ -357,14 +357,14 @@ class AccountMove(models.Model):
 
         for tax in self.line_ids.filtered(lambda a: a.tax_line_id):
             if tax.tax_group_id and tax.tax_group_id.l10n_ec_type in ('vat12', 'vat14', 'zero_vat', 'not_charged_vat', 'exempt_vat', 'ice','irbpnr'):
-                totalConImpuestos['totalImpuesto'] = OrderedDict([
+                totalConImpuestos['totalImpuesto'].append(OrderedDict([
                     ('codigo', tax.tax_line_id.tax_group_id.l10n_ec_electronic_code),
                     ('codigoPorcentaje', tax.tax_line_id.l10n_ec_electronic_code),
                     ('descuentoAdicional', '{:.2f}'.format(0)),  # TODO
                     ('baseImponible', '{:.2f}'.format(tax.tax_base_amount)),
                     ('tarifa', '{:.2f}'.format(tax.tax_line_id.amount)),
                     ('valor', '{:.2f}'.format(abs(tax.price_total))),
-                ])
+                ]))
 
 
         pagos = OrderedDict([
@@ -445,15 +445,14 @@ class AccountMove(models.Model):
             detalles['detalle'].append(detalle)
 
         for key, total_tax in other_vat_zero.items():
-            pass
-            #totalConImpuestos['totalImpuesto'].append(OrderedDict([
-            #    ('codigo', total_tax.get('codigo')),
-            #    ('codigoPorcentaje', total_tax.get('codigoPorcentaje')),
-            #    ('descuentoAdicional', total_tax.get('descuentoAdicional')),  # TODO
-            #    ('baseImponible', '{:.2f}'.format(total_tax.get('baseImponible', 0.00))),
-            #    ('tarifa', total_tax.get('tarifa')),
-            #    ('valor', total_tax.get('valor')),
-            #]))
+            totalConImpuestos['totalImpuesto'].append(OrderedDict([
+                ('codigo', total_tax.get('codigo')),
+                ('codigoPorcentaje', total_tax.get('codigoPorcentaje')),
+                ('descuentoAdicional', total_tax.get('descuentoAdicional')),  # TODO
+                ('baseImponible', '{:.2f}'.format(total_tax.get('baseImponible', 0.00))),
+                ('tarifa', total_tax.get('tarifa')),
+                ('valor', total_tax.get('valor')),
+            ]))
         tipoIdentificacionComprador = partner.l10n_latam_identification_type_id.electronic_code or '05'
 
         if partner.vat == "9999999999999":
@@ -509,6 +508,213 @@ class AccountMove(models.Model):
             )
 
         return ambiente_id,factura_dict, claveacceso, tipoemision
+
+    def get_nota_credito_dict(self):
+        """
+        En caso de requerirse el tag infoAdicional se debe agregar con un super.
+
+        :return:
+         ambiente_id: en recordset,
+         factura: OrderedDict,
+         claveacceso: string,
+         tipoemision: string,
+        """
+        ambiente_id = self.company_id.ambiente_id
+        company = self.company_id
+        #company_fiscal = company.partner_id.property_account_position_id
+        move_type = self.move_type
+        ruc = len(company.vat) > 13 and company.vat[2:15] or company.vat
+        currency = self.journal_id.currency_id
+
+        if ambiente_id.ambiente == '1':
+            # Si el ambiente es de pruebas enviamos siempre la fecha actual.
+            fechaemision = fields.Date.context_today(self)
+        else:
+            fechaemision = self.invoice_date
+
+
+        tipoemision = '1'  # offline siempre es normal.
+        partner = self.partner_id
+        number = self.l10n_latam_document_number
+
+        establecimiento = number[0:3]
+        puntoemision = number[3:6]
+        secuencial = number[6:15]
+
+        de = self.env['account.edi.document']
+
+
+        claveacceso = de.get_claveacceso(
+            fechaemision,
+            self.l10n_latam_document_type_id.electronic_code,
+            ruc,
+            company.ambiente_id,
+            establecimiento,
+            puntoemision,
+            secuencial,
+            )
+
+        infoTributaria = self.get_infotributaria_dict(ambiente_id, tipoemision, company,claveacceso)
+
+        totalConImpuestos = OrderedDict([
+            ('totalConImpuestos', []),
+        ])
+
+        for tax in self.line_ids.filtered(lambda a: a.tax_line_id):
+            if tax.tax_group_id and tax.tax_group_id.l10n_ec_type in ('vat12', 'vat14', 'zero_vat', 'not_charged_vat', 'exempt_vat', 'ice','irbpnr'):
+                totalConImpuestos['totalConImpuestos'].append(OrderedDict([
+                    ('codigo', tax.tax_line_id.tax_group_id.l10n_ec_electronic_code),
+                    ('codigoPorcentaje', tax.tax_line_id.l10n_ec_electronic_code),
+                    ('descuentoAdicional', '{:.2f}'.format(0)),
+                    ('baseImponible', '{:.2f}'.format(tax.tax_base_amount)),
+                    ('tarifa', '{:.2f}'.format(tax.tax_line_id.amount)),
+                    ('valor', '{:.2f}'.format(abs(tax.price_total))),
+                ]))
+
+
+        detalles = OrderedDict([
+            ('detalle', []),
+        ])
+        totalDescuento = 0.00
+        other_vat_zero = {}
+        for line in self.invoice_line_ids:
+            impuestos = OrderedDict([
+                ('impuesto', []),
+            ])
+
+            for tax in line.tax_ids:
+                if tax.tax_group_id and tax.tax_group_id.l10n_ec_type in ('vat12', 'vat14', 'zero_vat', 'not_charged_vat', 'exempt_vat', 'ice', 'irbpnr'):
+                    # Compute 'price_subtotal'.
+                    line_discount_price_unit = line.price_unit * (1 - (line.discount / 100.0))
+                    subtotal = line.quantity * line_discount_price_unit
+
+                    tax_amount = tax.compute_all(line_discount_price_unit,
+                quantity=line.quantity, currency=currency, product=line.product_id, partner=partner, is_refund=move_type in ('out_refund', 'in_refund'))
+                    base = tax_amount['taxes'][0]['base']
+                    amount = tax_amount['taxes'][0]['amount']
+
+                    impuestos['impuesto'].append(
+                        OrderedDict([
+                            ('codigo', tax.tax_group_id.l10n_ec_electronic_code),
+                            ('codigoPorcentaje', tax.l10n_ec_electronic_code),
+                            ('tarifa', tax.amount),
+                            ('baseImponible', '{:.2f}'.format(base)),
+                            ('valor', '{:.2f}'.format(amount)),
+                        ])
+                    )
+
+                    if tax.tax_group_id and tax.tax_group_id.l10n_ec_type in ('zero_vat', 'not_charged_vat', 'exempt_vat'):
+                        if not tax.tax_group_id.l10n_ec_type in other_vat_zero:
+                            other_vat_zero[tax.tax_group_id.l10n_ec_type] = {
+                                'codigo': tax.tax_group_id.l10n_ec_electronic_code,
+                                'codigoPorcentaje': tax.l10n_ec_electronic_code,
+                                'descuentoAdicional': '{:.2f}'.format(0),
+                                'baseImponible': 0.00,
+                                'tarifa': '{:.2f}'.format(0),
+                                'valor': '{:.2f}'.format(0),
+                            }
+                        other_vat_zero[tax.tax_group_id.l10n_ec_type]['baseImponible'] +=base
+
+            detalle = OrderedDict([
+                ('codigoPrincipal', line.product_id.default_code),
+                ('codigoAuxiliar', line.product_id.barcode),
+                ('descripcion', str(self.normalize(line.name)).replace("'","")),
+                ('cantidad', '{:.6f}'.format(line.quantity)),
+                ('precioUnitario', '{:.6f}'.format(line.price_unit)),
+                ('descuento', '{:.2f}'.format(line.discount)),
+                ('precioTotalSinImpuesto', '{:.2f}'.format(line.price_subtotal)),
+            ])
+            totalDescuento+=line.discount
+
+
+
+            detalle.update(
+                OrderedDict([
+                    ('impuestos', impuestos),
+                ])
+            )
+
+            detalles['detalle'].append(detalle)
+
+        for key, total_tax in other_vat_zero.items():
+            totalConImpuestos['totalConImpuestos'].append(OrderedDict([
+                ('codigo', total_tax.get('codigo')),
+                ('codigoPorcentaje', total_tax.get('codigoPorcentaje')),
+                ('descuentoAdicional', total_tax.get('descuentoAdicional')),
+                ('baseImponible', '{:.2f}'.format(total_tax.get('baseImponible', 0.00))),
+                ('tarifa', total_tax.get('tarifa')),
+                ('valor', total_tax.get('valor')),
+            ]))
+        tipoIdentificacionComprador = partner.l10n_latam_identification_type_id.electronic_code or '05'
+
+        if partner.vat == "9999999999999":
+            tipoIdentificacionComprador = "07"
+
+        numDocModificado = "000-000-000000000"
+        codDocModificado = "01"
+        fechaEmisionDocSustento = fechaemision
+        if self.l10n_latam_document_sustento_id:
+            docSustento = self.l10n_latam_document_sustento_id
+            _number = docSustento.l10n_latam_document_number
+            numDocModificado = "%s-%s-%s" % (_number[0:3],_number[3:6],_number[6:15])
+            codDocModificado = docSustento.l10n_latam_document_type_id.electronic_code
+            if ambiente_id.ambiente == '1':
+                # Si el ambiente es de pruebas enviamos siempre la fecha actual.
+                fechaEmisionDocSustento = fields.Date.context_today(self)
+            else:
+                fechaEmisionDocSustento = docSustento.invoice_date
+
+
+        infoNotaCredito = OrderedDict([
+            ('fechaEmision', self.normalize_date_two(fechaemision)),
+            ('dirEstablecimiento', self.journal_id.dir_establecimiento and self.normalize(self.journal_id.dir_establecimiento) or self.normalize(company.street)),
+            ('tipoIdentificacionComprador', tipoIdentificacionComprador),
+            ('razonSocialComprador', self.normalize(partner.name)),
+            ('identificacionComprador', partner.vat),
+            ('obligadoContabilidad', company.takes_accounting and 'SI' or 'NO'),
+
+            ('codDocModificado', codDocModificado),
+            ('numDocModificado', numDocModificado),
+            ('fechaEmisionDocSustento', self.normalize_date_two(fechaEmisionDocSustento)),
+
+            ('totalSinImpuestos', '{:.2f}'.format(self.amount_untaxed)),
+            ('valorModificacion', '{:.2f}'.format(self.amount_total)),
+            ('moneda', 'DOLAR'),
+            ('totalConImpuestos', totalConImpuestos),
+            ('motivo', self.normalize(self.ref))
+        ])
+
+        #if infoFactura.get('contribuyenteEspecial','000') == '000':
+        #    infoFactura.pop('contribuyenteEspecial')
+
+        nota_credito_dict = OrderedDict([
+                ('notaCredito', OrderedDict([
+                    ('@id', 'comprobante'),
+                    ('@version', '1.1.0'),
+                    ('infoTributaria', infoTributaria),
+                    ('infoFactura', infoNotaCredito),
+                    ('detalles', detalles),
+                ]),
+                )
+            ])
+
+        camposAdicionales = self.get_infoadicional()
+        if camposAdicionales:
+            infoAdicional = OrderedDict([
+                ('campoAdicional', []),
+            ])
+            for c in camposAdicionales:
+                infoAdicional['campoAdicional'].append(OrderedDict([
+                    ('@nombre', c[0]),
+                    ('#text', c[1]),
+                ]))
+
+            nota_credito_dict.get('notaCredito').update(OrderedDict([
+                ('infoAdicional', infoAdicional),
+            ])
+            )
+
+        return ambiente_id,nota_credito_dict, claveacceso, tipoemision
 
 
     def button_send_factura_electronica(self):
@@ -675,191 +881,6 @@ class AccountMove(models.Model):
             doc.write({'mail_send': True})
 
         return True
-
-
-    def get_nota_credito_dict(self):
-        """
-        :return:
-         ambiente_id: en recordset,
-         nota_credito_dict: OrderedDict,
-         claveacceso: string,
-         tipoemision: string,
-
-        """
-        ambiente_id = self.company_id.ambiente_id
-        company = self.company_id
-        #company_fiscal = company.partner_id.property_account_position_id
-        move_type = self.move_type
-        ruc = len(company.vat) > 13 and company.vat[2:15] or company.vat
-        currency = self.journal_id.currency_id
-
-        if ambiente_id.ambiente == '1':
-            # Si el ambiente es de pruebas enviamos siempre la fecha actual.
-            fechaemision = fields.Date.context_today(self)
-        else:
-            fechaemision = self.invoice_date
-
-
-        tipoemision = '1'  # offline siempre es normal.
-        partner = self.partner_id
-        number = self.l10n_latam_document_number
-
-        establecimiento = number[0:3]
-        puntoemision = number[3:6]
-        secuencial = number[6:15]
-
-        de = self.env['account.edi.document']
-
-
-        claveacceso = de.get_claveacceso(
-            fechaemision,
-            self.l10n_latam_document_type_id.electronic_code,
-            ruc,
-            company.ambiente_id,
-            number[0:3],
-            number[3:6],
-            number[6:15],
-            )
-
-        infoTributaria = self.get_infotributaria_dict(ambiente_id, tipoemision, company,claveacceso)
-
-        docmodificado = self.origin_invoice_ids
-        numdocmodificado = '-'.join([
-            docmodificado.establecimiento,
-            docmodificado.puntoemision,
-            docmodificado.secuencial.zfill(9)
-        ])
-
-        if len(docmodificado) != 1:
-            raise UserError(_("Debe tener un documento modificado."))
-
-
-        totalConImpuestos = OrderedDict([
-            ('totalImpuesto', []),
-        ])
-
-        for i in self.sri_tax_line_ids.filtered(lambda l: l.group in (
-                'ImpGrav', 'Imponible', 'NoGraIva', 'ImpExe', 'Ice', 'Irbpnr')):
-            totalConImpuestos['totalImpuesto'].append(
-                OrderedDict([
-                    ('codigo', i.codigo),
-                    ('codigoPorcentaje', i.codigoporcentaje),
-                    ('baseImponible', i.base),
-                    ('valor', '{:.2f}'.format(i.amount)),
-                ])
-            )
-        tipoIdentificacionComprador = fiscal.identificacion_id.tpidcliente
-        if partner.vat == "9999999999999":
-            tipoIdentificacionComprador = "07"
-
-        infoNotaCredito = OrderedDict([
-            ('fechaEmision', self.normalize_date(fechaemision)),
-            ('dirEstablecimiento', self.normalize(
-                autorizacion_id.direstablecimiento or company.street + company.street2)),
-            ('tipoIdentificacionComprador', tipoIdentificacionComprador),
-            ('razonSocialComprador', self.normalize(partner.name)),
-            ('identificacionComprador', partner.vat),
-            ('contribuyenteEspecial', company.contribuyenteespecial or '000'),
-            ('obligadoContabilidad',
-             company_fiscal.obligada_contabilidad and 'SI' or 'NO'),
-            # ('rise', "TODO",
-            ('codDocModificado', docmodificado.comprobante_id.code),
-            ('numDocModificado', numdocmodificado),
-            ('fechaEmisionDocSustento', self.normalize_date(
-                docmodificado.date_invoice)),
-            ('totalSinImpuestos', self.subtotal),
-            ('valorModificacion', self.total),
-            ('moneda', self.currency_id.name),
-            ('totalConImpuestos', totalConImpuestos),
-            ('motivo', self.name),
-        ])
-
-        detalles = OrderedDict([
-            ('detalle', []),
-        ])
-
-        for line in self.invoice_line_ids:
-            impuestos = OrderedDict([
-                ('impuesto', []),
-            ])
-
-            for tax in line.sri_tax_line_ids:
-                if tax.group in ('ImpGrav', 'Imponible', 'NoGraIva', 'ImpExe', 'Ice', 'Irbpnr'):
-                    impuestos['impuesto'].append(
-                        OrderedDict([
-                            ('codigo', tax.codigo),
-                            ('codigoPorcentaje', tax.codigoporcentaje),
-                            ('tarifa', tax.porcentaje),
-                            ('baseImponible', '{:.2f}'.format(tax.base)),
-                            ('valor', '{:.2f}'.format(abs(tax.amount))),
-                        ])
-                    )
-
-            detalle = OrderedDict([
-                ('codigoInterno', line.product_id.default_code),
-                ('codigoAdicional', line.product_id.barcode),
-                ('descripcion', str(self.normalize(line.name)).replace("'","")),
-                ('cantidad', '{:.6f}'.format(line.quantity)),
-                ('precioUnitario', '{:.6f}'.format(line.price_unit)),
-                ('descuento', '{:.2f}'.format(line.price_discount)),
-                ('precioTotalSinImpuesto',
-                 '{:.2f}'.format(line.price_subtotal)),
-            ])
-
-            detAdicionales = line.get_detallesadicionales()
-
-            if detAdicionales:
-                detallesAdicionales = OrderedDict([
-                    ('detAdicional', []),
-                ])
-                for d in detAdicionales:
-                    detallesAdicionales['detAdicional'].append(OrderedDict([
-                        ('@nombre', d[0]),
-                        ('@valor', d[1]),
-                    ]))
-                detalle.update(
-                    OrderedDict([
-                        ('detallesAdicionales', detallesAdicionales),
-                    ])
-                )
-
-            detalle.update(
-                OrderedDict([
-                    ('impuestos', impuestos),
-                ])
-            )
-
-            detalles['detalle'].append(detalle)
-
-        nota_credito_dict = OrderedDict([
-            ('notaCredito', OrderedDict([
-                ('@id', 'comprobante'),
-                ('@version', '1.1.0'),
-                ('infoTributaria', infoTributaria),
-                ('infoNotaCredito', infoNotaCredito),
-                ('detalles', detalles),
-            ])
-            )
-        ])
-
-        camposAdicionales = self.get_infoadicional()
-        if camposAdicionales:
-            infoAdicional = OrderedDict([
-                ('campoAdicional', []),
-            ])
-            for c in camposAdicionales:
-                infoAdicional['campoAdicional'].append(OrderedDict([
-                    ('@nombre', i[0]),
-                    ('#text', i[1]),
-                ]))
-
-            nota_credito_dict.get('notaCredito').update(OrderedDict([
-                ('infoAdicional', infoAdicional),
-            ])
-            )
-
-        return ambiente_id, comprobante_id, nota_credito_dict, claveacceso, tipoemision
-
 
     def button_send_nota_credito_electronica(self):
         ambiente_id, comprobante_id, nota_credito, claveacceso, tipoemision = self.get_nota_credito_dict()

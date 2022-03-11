@@ -77,7 +77,7 @@
                                 <div class="text-center"
                                      style="color: #a94442;background-color: #f2dede; border-color: #ebccd1;padding: 5px;border-top-left-radius: 3px;border-top-right-radius: 3px;">
                                     <h4 t-if="o.move_type=='out_invoice'">FACTURA</h4>
-                                    <h4 t-if="o.move_type=='out_refund' and o.l10n_latam_document_type_id.code != '05'">NOTA DE CRÉDITO</h4>
+                                    <h4 t-if="o.move_type=='out_refund' and o.l10n_latam_document_type_id.code == '04'">NOTA DE CRÉDITO</h4>
                                     <h4 t-if="o.move_type=='out_refund' and o.l10n_latam_document_type_id.code == '05'">NOTA DE DÉBITO</h4>
                                 </div>
                                 <table class="table table-bordered">
@@ -126,7 +126,13 @@
                                     <br/>
                                     <span name="res_store">
                                         <b>Dir. Sucursal:</b>
-                                        <span t-field="o.company_id.street"/>
+
+                                        <t t-if="o.journal_id.dir_establecimiento">
+                                            <span t-field="o.journal_id.dir_establecimiento"/>
+                                        </t>
+                                        <t t-else="else">
+                                            <span t-field="o.company_id.street"/>
+                                        </t>
                                     </span>
                                     <br/>
                                     <span t-if="o.company_id.is_special_taxpayer_number">
@@ -151,7 +157,9 @@
                                     <span t-if="o.company_id.regime_micro">
                                         <b>CONTRIBUYENTE REGIMEN MICROEMPRESAS</b>
                                     </span>
-
+                                    <span t-if="o.company_id.regime_rimpe">
+                                        <b>CONTRIBUYENTE REGIMEN RIMPE</b>
+                                    </span>
                                 </div>
 
                             </div>
@@ -224,17 +232,17 @@
                             <tr t-if="o.move_type=='out_refund'">
                                 <td>
                                     <b>Fecha de emisión:</b>
-                                    <span t-esc="o.invoice_rectification_id.date_invoice"/>
+                                    <span t-esc="o.l10n_latam_document_sustento_id.invoice_date"/>
                                 </td>
                                 <td>
                                     <b>Factura:</b>
-                                    <span t-field="o.invoice_rectification_id.internal_number"/>
+                                    <span t-field="o.l10n_latam_document_sustento_id.l10n_latam_document_number"/>
                                 </td>
                             </tr>
                             <tr t-if="o.move_type=='out_refund'">
                                 <td colspan="2">
                                     <b>Razón de la modificación:</b>
-                                    <span t-field="o.invoice_rectification_reason"/>
+                                    <span t-field="o.ref"/>
                                 </td>
                             </tr>
                         </table>

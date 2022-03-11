@@ -5,8 +5,8 @@ import os
 import io
 import subprocess
 import tempfile
-
-import xml
+from datetime import timedelta
+import xml,time
 from collections import OrderedDict
 from lxml import etree as e
 from odoo import _, api, fields, models
@@ -108,18 +108,21 @@ class SriDocumentoElectronico(models.Model):
 
     @api.model
     def cron_generate_bash_xml(self, limit=1000):
-        docs = self.search([('state', '=', 'to_send'),('claveacceso','!=',False),('move_id.move_type','in',['out_invoice'])], limit=limit)
-        for rec in docs: #,'out_refunde'
+        docs = self.search([('state', '=', 'to_send'),('claveacceso','!=',False),('move_id.move_type','in',['out_invoice','out_refund'])], limit=limit)
+        for rec in docs: #
             move = rec.move_id
 
             if move.move_type == 'out_invoice':
                 ambiente_id, factura, claveacceso, tipoemision = move.get_factura_dict()
                 reference = 'account.move,%s' % move.id
-                self.get_documento_electronico_dict(ambiente_id, factura, rec.claveacceso, tipoemision, reference)
+                #self.get_documento_electronico_dict(ambiente_id, factura, rec.claveacceso, tipoemision, reference)
+            elif move.move_type == 'out_refund':
+                ambiente_id, factura, claveacceso, tipoemision = move.get_nota_credito_dict()
+                reference = 'account.move,%s' % move.id
 
-                rec.write({'state': 'sent'})
-            else:
-                pass
+            self.get_documento_electronico_dict(ambiente_id, factura, rec.claveacceso, tipoemision, reference)
+            rec.write({'state': 'sent'})
+
 
     @api.model
     def cron_generate_bash_access_key(self, limit=10000,ids=[]):
@@ -163,6 +166,15 @@ class SriDocumentoElectronico(models.Model):
             except Exception as ex:
                 print(ex)
 
+        self.change_state_to_date_unautorized_complete()
+
+    def change_state_to_date_unautorized_complete(self):
+        today = fields.Date.today() - timedelta(days=2)
+        docs = self.search([ ('date_unautorized','<=',today),('state', 'in', ['unautorized','return','rejected']), ('claveacceso', '!=', False), ('claveacceso', '!=', 'N/A')])
+        for rec in docs:
+            rec.write({'state': 'sent'})
+
+        #date_unautorized
     @api.model
     def cron_received_bash_auth(self, limit=1000):
         docs = self.search([('state', 'in', ['received','in_process'])], limit=limit)
@@ -178,7 +190,7 @@ class SriDocumentoElectronico(models.Model):
         for rec in self.search([('edi_format_id.code', '=', 'FESRI'), ('mail_send', '=', False), ('state', '=', 'autorized')], limit=limit):
             try:
                 rec.move_id.send_email_de()
-                rec.write({'mail_send': True})
+                rec.write({'mail_send': True, 'date_mail_send': time.strftime('%Y-%m-%d')})
 
             except Exception as e:
                 print(e)
@@ -269,10 +281,10 @@ class SriDocumentoElectronico(models.Model):
         :return:
         """
         jar_path = os.path.join(__file__, "../../src/xadesBes/firma.jar")
-        java_path = os.path.join(__file__, "../../src/lib/jre1.8.0_311/bin/java")
-
+        #java_path = os.path.join(__file__, "../../src/lib/jre1.8.0_311/bin/java")
+        java_path = "~/lib/java/bin/java"
         jar_path = os.path.abspath(jar_path)
-        java_path = os.path.abspath(java_path)
+        #java_path = os.path.abspath(java_path)
 
         cmd = [java_path, '-jar', jar_path, xml.decode().replace("\n",""), p12.decode(), clave.decode()]
 
@@ -453,10 +465,12 @@ class SriDocumentoElectronico(models.Model):
             self.write({
                 'state': 'autorized',
                 'error': False,
+                'date_unautorized': False,
                 'xml_file': base64.b64encode(comprobante.encode('utf-8')),
                 'xml_filename': ''.join([access_key, '.xml']),
                 'fechaautorizacion': fields.Datetime.to_string(autorizacion.fechaAutorizacion),
             })
+            #Descomentar Yordany
             pdf = self.env.ref('l10n_ec_sri.report_factura_electronica_id').sudo()._render_qweb_pdf([self.move_id.id])[
                 0]
 
@@ -496,15 +510,19 @@ class SriDocumentoElectronico(models.Model):
         else:
             if registre ==True and len(messages):
                 stateSave = self.state
-
+                date_unautorized = time.strftime('%Y-%m-%d')
                 if autorizacion.estado == 'DEVUELTA':
                     stateSave = 'return'
                 elif autorizacion.estado == 'RECHAZADA':
-                    stateSave = 'REJECTED'
+                    stateSave = 'rejected'
                 elif autorizacion.estado == 'NO AUTORIZADO':
                     stateSave = 'unautorized'
+
+                else:
+                    date_unautorized  = False
                 self.write({
                     'state': stateSave,
+                    'date_unautorized': date_unautorized,
                     'error': " | ".join(messages)
                 })
 
@@ -649,6 +667,14 @@ class SriDocumentoElectronico(models.Model):
 
     mail_send = fields.Boolean(
         string='Correo Enviado?',
+        required=False)
+
+    date_mail_send = fields.Date(
+        string='Fecha Envio Correo',
+        required=False)
+
+    date_unautorized = fields.Date(
+        string='Fecha No Autorizado',
         required=False)
 
 
