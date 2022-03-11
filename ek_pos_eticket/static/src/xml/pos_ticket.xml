@@ -33,6 +33,9 @@
                 </t>
             </div>
         </xpath>
+
+
+
         <xpath expr="//div[hasclass('pos-receipt')]/br" position="replace">
 
         </xpath>
@@ -81,7 +84,7 @@
                 <hr/>
                 <strong>
                     <div>DESCRIPCIÓN</div>
-                    <div>CANT. x PRECIO UNIT.
+                    <div>CANT. UNIDAD x PRECIO UNIT.
                        &#160;&#160;&#160;&#160;&#160;&#160;&#160;
                             &#160;&#160;&#160;&#160;&#160;&#160;&#160;
                             &#160;&#160;&#160;&#160;&#160;&#160;&#160;
@@ -94,22 +97,12 @@
             <div class="pos-center-align">
                 <b>*** DOCUMENTO SIN VALIDEZ TRIBUTARIA ***</b>
                 <br/>
-                Consulte sus documentos luego de 24 horas en nuestra bandeja online con su correo eletrónico registrado
-                en:
-                <b>
-                <t t-if="receipt.company.website">
-                    <div><t t-esc="receipt.company.website" /></div>
-                </t>
-            </b>
-                <br/>
                 Clave de Acceso:
                 <br/>
-                <div style="font-size: 10px !important;">
+                <div style="font-size: 8px !important;">
                     <t t-if='receipt.access_key'>
-
                          <t t-esc="receipt.access_key"/>
                     </t>
-
                 </div>
             </div>
         </xpath>
