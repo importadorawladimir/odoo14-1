@@ -59,6 +59,7 @@ class AccountMove(models.Model):
         for inv in self:
             if inv.retention_id:
                 inv.retention_id.write({'state': 'draft'})
+                inv.line_ids.filtered(lambda a: a.credit == 0 and a.debit == 0 and a.retention_id.id == inv.retention_id.id).unlink()
                 inv.retention_id.unlink()
         return True
 
@@ -92,7 +93,7 @@ class AccountMove(models.Model):
                 #line_ids
 
             #line.tax_ids
-            tids = [l.id for l in inv.line_ids if l.l10n_ec_type in ['withhold_income_tax', 'withhold_vat']]
+            tids = [l.id for l in inv.line_ids if l.l10n_ec_type in ['withhold_income_tax', 'withhold_vat']] + self.get_tax_zero(inv)
 
             if tids and len(tids) > 0:
                 _type = self.env['l10n_latam.document.type'].search([('l10n_ec_type','=','in_withhold'),('internal_type','=','invoice')],limit=1)
@@ -117,3 +118,45 @@ class AccountMove(models.Model):
                 inv.write({'retention_id': withdrawing.id})
                 withdrawing.action_validate()
         return True
+
+    # calculando retenciones en facturas con impuesto 0%
+    def get_tax_zero(self,inv):
+        tax_line = {}
+        line_ids = []
+        move_line_obj = self.env['account.move.line']
+        for line in inv.invoice_line_ids:
+            for tax in line.tax_ids.filtered(lambda a: a.amount == 0 and a.tax_group_id.l10n_ec_type in ['withhold_income_tax', 'withhold_vat']):
+
+                if not tax.id in tax_line:
+                    tax_line[tax.id] = {
+                        'tax_line_id': tax.id,
+                        'name': tax.name,
+                        'partner_id': inv.partner_id.id,
+                        'move_id': inv.id,
+                        'tax_base_amount': 0.00,
+                        'debit': 0.00,
+                        'credit': 0.00,
+                        'quantity': 1,
+                        'date': inv.invoice_date,
+                        'exclude_from_invoice_tab': True
+
+                    }
+                    invoice_repartition_lines = tax.mapped('invoice_repartition_line_ids').filtered(
+                        lambda line: line.repartition_type == 'tax')
+
+                    tag_ids = []
+                    account_id = False
+                    for inv_repartition_line in invoice_repartition_lines:
+                        tag_ids += inv_repartition_line.tag_ids.ids
+                        account_id = inv_repartition_line.account_id.id
+
+                    tax_line[tax.id]['tax_tag_ids'] = [(6, 0, tag_ids)]
+                    tax_line[tax.id]['account_id'] = account_id
+
+                tax_line[tax.id]['tax_base_amount'] += line.price_subtotal
+
+        for data in tax_line.values():
+            _id = move_line_obj.create(data)
+
+            line_ids.append(_id.id)
+        return line_ids

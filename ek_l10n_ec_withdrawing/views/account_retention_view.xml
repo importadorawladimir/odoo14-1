@@ -19,7 +19,6 @@
                     <span string="Retención Borrador" attrs="{'invisible': [('state','!=','draft')]}" class="o_form_label"/>
                     <span string="Retención Generada" attrs="{'invisible': [('state','=','draft')]}" class="o_form_label"/>
                     <field name="name" class="oe_inline" required="1"/>
-
                   </h1>
                 </div>
                 <group>
@@ -32,15 +31,12 @@
                         <field name="company_id" groups="base.group_multi_company" readonly="1"/>
                   </group>
                   <group>
-                    <span string="Comprobante" for="type" attrs="{'invisible':[('state','=','draft')]}"/>
-                    <div attrs="{'invisible':[('state','=','draft')]}">
-                      <field name="l10n_latam_parent_document_type_id" class="oe_inline" attrs="{'required':1, 'invisible':[('state','=','draft')]}" />
-                      <field name="ref" class="oe_inline" attrs="{'required':1, 'invisible':[('state','=','draft')]}"/>
-                    </div>
+                    <field string="Tipo Doc. Sustento" name="l10n_latam_parent_document_type_id" attrs="{'required':1, 'invisible':[('state','=','draft')]}" />
+                    <field name="ref" attrs="{'required':1, 'invisible':[('state','=','draft')]}"/>
                   </group>
                 </group>
                 <notebook colspan="4">
-                  <page string="Impuestos">
+                  <page string="Impuestos" name="taxed">
                         <field name="tax_ids" widget="many2many" nolabel="1" domain="[('retention_id','=',id),('l10n_ec_type','in',['withhold_income_tax','withhold_vat'])]" options="{'no_create': True}">
                           <tree string="Impuestos Aplicados">
                             <field name="move_id"/>

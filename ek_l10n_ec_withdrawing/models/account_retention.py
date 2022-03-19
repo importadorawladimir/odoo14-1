@@ -12,8 +12,6 @@ class AccountRetention(models.Model):
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin', 'sequence.mixin']
     _description = "Retenciones"
     _order = 'date desc, name desc'
-    _mail_post_access = 'read'
-    _check_company_auto = True
     _sequence_index = "journal_id"
 
     move_type = fields.Selection(selection=[
@@ -35,7 +33,7 @@ class AccountRetention(models.Model):
         required=True,
         readonly=True,
         states={'draft': [('readonly', False)]},
-        default=lambda self: self.env.user.company_id
+        default=lambda self: self.env.company.id
     )
 
     create_retention_type = fields.Selection(
@@ -123,7 +121,10 @@ class AccountRetention(models.Model):
         store=True
     )
 
-    @api.depends('tax_ids.balance')
+    l10n_latam_document_auth = fields.Char(
+        string=u'Número de Autorización')
+
+    @api.depends('tax_ids.balance','tax_client_ids.amount_total')
     def _amount_total(self):
         # self.ensure_one()
         for rec in self:
@@ -237,7 +238,7 @@ class AccountRetention(models.Model):
                             raise ValidationError(
                                 _(u'No se permiten anular retenciones con asientos contables publicados. Por favor anule antes el asiento contable correspondiente.'))
                         else:
-                            move.unlink()
+                            move.with_context(force_delete=True).unlink()
 
             self.write({'state': 'cancel'})
 
@@ -259,16 +260,16 @@ class AccountRetention(models.Model):
             inv = account_invoice.browse(ret.invoice_id.id)
 
             if not ret.tax_client_ids:
-                raise Warning(_(u'Cree algunas líneas en la retencion'))
+                raise ValidationError(_(u'Cree algunas líneas en la retencion'))
             if ret.move_client_id and ret.move_client_id.state != 'draft':
-                raise Warning(_(u'La retención ya posee un asiento contable asentado.'))
+                raise ValidationError(_(u'La retención ya posee un asiento contable asentado.'))
             if ret.move_type not in ('ret_out_invoice'):
-                raise Warning(_(u'Solo se pueden generar asientos para retenciones de clientes.'))
+                raise ValidationError(_(u'Solo se pueden generar asientos para retenciones de clientes.'))
             if inv.state not in ('posted'):
-                raise Warning(
+                raise ValidationError(
                     _(u'La factura a la que se desea generar la retención no se encuentra validada o ya ha sido pagada en su totalidad.'))
             if inv.retention_id and inv.retention_id != self.id:
-                raise Warning(
+                raise ValidationError(
                     _(u'La factura a la que se desea generar la retención ya contiene otra retención asociada.'))
 
             ctx = dict(self._context, lang=ret.partner_id.lang)
@@ -352,7 +353,7 @@ class AccountRetention(models.Model):
     def unlink(self):
         for obj in self:
             if obj.state in ['done']:
-                raise Warning(_('No se permite borrar retenciones validadas.'))
+                raise ValidationError(_('No se permite borrar retenciones validadas.'))
 
             if obj.move_client_id:
                 move = self.env['account.move'].browse(obj.move_client_id.id)
