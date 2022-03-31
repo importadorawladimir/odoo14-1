@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_base_zero_invoice_tree" model="ir.ui.view">
+            <field name="name">account.invoice.base.zero.tree</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_invoice_tree"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//field[@name='amount_untaxed_signed']" position="after">
+                    <field name="l10n_latam_amount_untaxed_zero" sum="Total" optional="hide"/>
+                    <field name="l10n_latam_amount_untaxed_not_zero" sum="Total" optional="hide"/>
+                </xpath>
+
+            </field>
+        </record>
+
+
+    </data>
+</odoo>

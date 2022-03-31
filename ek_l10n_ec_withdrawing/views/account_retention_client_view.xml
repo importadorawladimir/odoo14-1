@@ -38,6 +38,7 @@
                       <field name="l10n_latam_parent_document_type_id" class="oe_inline" attrs="{'required':1, 'invisible':[('state','=','draft')]}" />
                     </div>
                       <field name="move_client_id" attrs="{'readonly':1, 'invisible':[('state','=','draft')]}"/>
+                      <field name="l10n_latam_document_auth"/>
                   </group>
                 </group>
                 <notebook colspan="4">

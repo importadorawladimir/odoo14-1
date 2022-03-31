@@ -17,7 +17,8 @@ Authors:
     'depends': [
         'ek_l10n_ec',
         'account',
-        'l10n_latam_invoice_document'
+        'l10n_latam_invoice_document',
+        'ek_l10n_latam_invoice_document'
     ],   
     'data': [
         'data/account_ats_sustento.xml',
