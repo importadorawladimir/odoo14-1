@@ -490,7 +490,7 @@ class SriDocumentoElectronico(models.Model):
                 'fechaautorizacion': fields.Datetime.to_string(autorizacion.fechaAutorizacion),
             })
             #Descomentar Yordany
-            '''pdf = self.env.ref('l10n_ec_sri.report_factura_electronica_id').sudo()._render_qweb_pdf([self.move_id.id])[
+            pdf = self.env.ref('l10n_ec_sri.report_factura_electronica_id').sudo()._render_qweb_pdf([self.move_id.id])[
                 0]
 
             self.write({
@@ -511,7 +511,7 @@ class SriDocumentoElectronico(models.Model):
                     'res_model': 'account.move',
                     'res_id': self.move_id.id,
                     'type': 'binary'
-                })'''
+                })
 
             # Enviar correo si el documento es AUTORIZADO.
             '''try:
