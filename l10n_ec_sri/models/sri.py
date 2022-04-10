@@ -169,8 +169,8 @@ class SriDocumentoElectronico(models.Model):
         self.change_state_to_date_unautorized_complete()
 
     def change_state_to_date_unautorized_complete(self):
-        today = fields.Date.today() - timedelta(days=2)
-        docs = self.search([ ('date_unautorized','<=',today),('state', 'in', ['unautorized','return','rejected']), ('claveacceso', '!=', False), ('claveacceso', '!=', 'N/A')])
+        today = fields.Date.today() - timedelta(days=1)
+        docs = self.search([('state', 'in', ['unautorized','return','rejected']), ('claveacceso', '!=', False), ('claveacceso', '!=', 'N/A'),'|',('date_unautorized','<=',today),('date_unautorized','=',False)])
         for rec in docs:
             rec.write({'state': 'sent'})
 
