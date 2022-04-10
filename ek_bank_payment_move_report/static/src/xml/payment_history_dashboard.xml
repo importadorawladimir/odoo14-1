@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <!-- This template is for a table at the top of purchase views that shows some KPIs. -->
+    <t t-name="ek_bank_payment_move_report.PaymentHistoryDashboard">
+        <div class="o_payment_history_dashboard container">
+        <div class="row">
+            <div class="col-sm-5">
+            <table class="table table-sm">
+                <!-- thead needed to avoid list view rendering error for some reason -->
+                <thead>
+                    <tr>
+                    <!-- can't use th tag due to list rendering error when no values in list...
+                        <td class="o_text"></td>-->
+                        <td class="o_text">
+                            <b>Fecha de Reporte (Hoy)</b>
+                        </td>
+                        <!--<td class="o_main o_dashboard_action" title="All Draft RFQs" name="ek_bank_payment_move_report.payment_historyaction_dashboard" context='{"search_default_draft_rfqs": true}'>
+                            <a href="#"><t t-esc="values['all_to_send']"/><br/>Control de Cheques </a>
+                        </td>-->
+                        <td class="o_main o_dashboard_action" title="Cheques pendientes de debito" name="ek_bank_payment_move_report.payment_historyaction_dashboard" context='{"search_default_waiting_rfqs": true}'>
+                            <a href="#"><t t-esc="values['check_holding_count']"/><br/>Cheques Por Debitar</a>
+                        </td>
+                        <td class="o_main o_dashboard_action" title="Cheques Pendientes de deposito" name="ek_bank_payment_move_report.payment_historyaction_dashboard" context='{"search_default_late_rfqs": true}'>
+                            <a href="#"><t t-esc="values['check_handed_count']"/><br/>Cheques Por Depositar</a>
+                        </td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b><t t-esc="values['today']"/></b></td>
+                        <!--<td class="o_main o_dashboard_action" title="My Draft RFQs" name="ek_bank_payment_move_report.payment_historyaction_dashboard" context='{"search_default_draft_rfqs": true, "search_default_my_purchases": true}'>
+                            <a href="#"><t t-esc="values['my_to_send']"/>123</a>
+                        </td>-->
+                        <td class="o_main o_dashboard_action" title="Monto de Cheques Pendientes de Debito" name="ek_bank_payment_move_report.payment_historyaction_dashboard" context='{"search_default_waiting_rfqs": true, "search_default_my_purchases": true}'>
+                            <a href="#">(<t t-esc="values['company_currency_symbol']"/>) <t t-esc="values['check_handed_amount']"/></a>
+
+                        </td>
+                        <td class="o_main o_dashboard_action" title="Monto de Cheques Pendientes de deposito" name="ek_bank_payment_move_report.payment_historyaction_dashboard" context='{"search_default_late_rfqs": true, "search_default_my_purchases": true}'>
+                            <a href="#">(<t t-esc="values['company_currency_symbol']"/>) <t t-esc="values['check_holding_amount']"/></a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table></div>
+
+            <div class="col-sm-7">
+            <table class="table table-sm">
+                <!-- thead needed to avoid list view rendering error for some reason -->
+                <thead>
+                    <tr>
+                        <td class="o_text">Depositos del Dia (<t t-esc="values['company_currency_symbol']"/>)</td>
+                        <td><span><t t-esc="values['deposit']"/></span></td>
+                        <td class="o_text">Notas de Credito (<t t-esc="values['company_currency_symbol']"/>)</td>
+                        <td><span><t t-esc="values['nc']"/></span></td>
+                        <td class="o_text">Saldo Inicial (<t t-esc="values['company_currency_symbol']"/>)</td>
+                        <td><span><t t-esc="values['initial_balance']"/></span></td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="o_text">Cheques del Dia (<t t-esc="values['company_currency_symbol']"/>)</td>
+                        <td><span><t t-esc="values['check_today']"/></span></td>
+                        <td class="o_text">Notas de Debito (<t t-esc="values['company_currency_symbol']"/>)</td>
+                        <td><span><t t-esc="values['nd']"/></span></td>
+                        <td class="o_text">Balance (<t t-esc="values['company_currency_symbol']"/>)</td>
+                        <td><span><t t-esc="values['balance']"/></span></td>
+                    </tr>
+                </tbody>
+            </table></div>
+        </div></div>
+    </t>
+</templates>

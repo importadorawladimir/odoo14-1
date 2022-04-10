@@ -16,22 +16,27 @@ class AccountMove(models.Model):
 
 
     def _compute_l10n_latam_amount_untaxed_zero(self):
-        recs_invoice = self.filtered(lambda x: x.is_invoice())
-        for invoice in recs_invoice:
-            base_zero = 0.00
-            base_not_zero = 0.00
+        #recs_invoice = self.filtered(lambda x: x.is_invoice())
+        for invoice in self:
+            if invoice.is_invoice():
+                base_zero = 0.00
+                base_not_zero = 0.00
 
-            if invoice.is_inbound():
-                sign = 1
+                if invoice.is_inbound():
+                    sign = 1
+                else:
+                    sign = -1
+
+                for line in invoice.invoice_line_ids:
+                    if len(line.tax_ids.filtered(
+                            lambda a: a.tax_group_id.l10n_ec_type in ('zero_vat', 'not_charged_vat', 'exempt_vat'))):
+                        base_zero += line.price_subtotal
+
+                    if len(line.tax_ids.filtered(lambda a: a.tax_group_id.l10n_ec_type in ('vat12', 'vat14', 'irbpnr'))):
+                        base_not_zero += line.price_subtotal
+
+                invoice.l10n_latam_amount_untaxed_zero = base_zero * sign
+                invoice.l10n_latam_amount_untaxed_not_zero = base_not_zero * sign
             else:
-                sign = -1
-
-            for line in invoice.invoice_line_ids:
-                if len(line.tax_ids.filtered(lambda a: a.tax_group_id.l10n_ec_type in ('zero_vat', 'not_charged_vat', 'exempt_vat'))):
-                    base_zero += line.price_subtotal
-
-                if len(line.tax_ids.filtered(lambda a: a.tax_group_id.l10n_ec_type in('vat12', 'vat14','irbpnr'))):
-                    base_not_zero += line.price_subtotal
-
-            invoice.l10n_latam_amount_untaxed_zero = base_zero * sign
-            invoice.l10n_latam_amount_untaxed_not_zero = base_not_zero * sign
+                invoice.l10n_latam_amount_untaxed_zero = 0
+                invoice.l10n_latam_amount_untaxed_not_zero = 0

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<odoo>
+    <template id="assets_backend" name="ek_bank_payment_move_report assets" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/scss" href="/ek_bank_payment_move_report/static/src/scss/payment_history.scss"/>
+            <script type="text/javascript" src="/ek_bank_payment_move_report/static/src/js/payment_history_dashboard.js"></script>
+        </xpath>
+    </template>
+</odoo>

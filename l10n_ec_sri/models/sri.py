@@ -204,13 +204,24 @@ class SriDocumentoElectronico(models.Model):
             return
 
         move = res.move_id
+        retention = res.retention_id
 
-        company = move.company_id
-        number = move.l10n_latam_document_number
-        ruc = company.vat and company.vat[2:15] or "SINRUCCIA"
+        if retention:
+            company = retention.company_id
+            number = retention.name
+            docCode = retention.l10n_latam_document_type_id.electronic_code
+            date = retention.date
+        else:
+            company = move.company_id
+            number = move.l10n_latam_document_number
+            docCode = move.l10n_latam_document_type_id.electronic_code
+            date = move.invoice_date
+
+        ruc = len(company.vat) > 13 and company.vat[2:15] or company.vat
+
         claveacceso = self.get_claveacceso(
-            move.invoice_date,
-            move.l10n_latam_document_type_id.electronic_code,
+            date,
+            docCode,
             ruc,
             company.ambiente_id,
             number[0:3],
@@ -219,11 +230,19 @@ class SriDocumentoElectronico(models.Model):
             )
 
 
-        ambiente_id, factura, claveacceso, tipoemision = move.get_factura_dict()
-        reference = 'account.move,%s' % self.id
+        if retention:
+            reference = 'account.retention,%s' % self.id
+        else:
+            if move.move_type == 'out_invoice':
+                ambiente_id, document, claveacceso, tipoemision = move.get_factura_dict()
+                reference = 'account.move,%s' % move.id
+            elif move.move_type == 'out_refund':
+                ambiente_id, document, claveacceso, tipoemision = move.get_nota_credito_dict()
+                reference = 'account.move,%s' % move.id
+
 
         try:
-            res.write(self.get_documento_electronico_dict(ambiente_id,factura,claveacceso, tipoemision, reference))
+            res.write(self.get_documento_electronico_dict(ambiente_id,document,claveacceso, tipoemision, reference))
         except:
             pass
 
@@ -471,7 +490,7 @@ class SriDocumentoElectronico(models.Model):
                 'fechaautorizacion': fields.Datetime.to_string(autorizacion.fechaAutorizacion),
             })
             #Descomentar Yordany
-            pdf = self.env.ref('l10n_ec_sri.report_factura_electronica_id').sudo()._render_qweb_pdf([self.move_id.id])[
+            '''pdf = self.env.ref('l10n_ec_sri.report_factura_electronica_id').sudo()._render_qweb_pdf([self.move_id.id])[
                 0]
 
             self.write({
@@ -492,7 +511,7 @@ class SriDocumentoElectronico(models.Model):
                     'res_model': 'account.move',
                     'res_id': self.move_id.id,
                     'type': 'binary'
-                })
+                })'''
 
             # Enviar correo si el documento es AUTORIZADO.
             '''try:
@@ -677,7 +696,55 @@ class SriDocumentoElectronico(models.Model):
         string='Fecha No Autorizado',
         required=False)
 
+    retention_id = fields.Many2one('account.retention', string='Doc. Retención', copy=False)
 
+
+class AccountRetention(models.Model):
+    _inherit = 'account.retention'
+
+    edi_document_ids = fields.One2many(
+        comodel_name='account.edi.document',
+        inverse_name='retention_id',
+        string='Documentos EDI',
+        required=False)
+    
+
+    '''def action_validate(self):
+        # OVERRIDE
+        # Set the electronic document to be posted and post immediately for synchronous formats.
+        posted = super(AccountRetention, self).action_validate()
+
+        edi_document_vals_list = []
+        for rec in self:
+            super(AccountRetention, self).action_validate()
+
+            
+        for move in posted:
+            for edi_format in move.journal_id.edi_format_ids:
+                is_edi_needed = move.is_invoice(include_receipts=False) and edi_format._is_required_for_invoice(move)
+
+                if is_edi_needed:
+                    errors = edi_format._check_move_configuration(move)
+                    if errors:
+                        raise UserError(_("Invalid invoice configuration:\n\n%s") % '\n'.join(errors))
+
+                    existing_edi_document = move.edi_document_ids.filtered(lambda x: x.edi_format_id == edi_format)
+                    if existing_edi_document:
+                        existing_edi_document.write({
+                            'state': 'to_send',
+                            'attachment_id': False,
+                        })
+                    else:
+                        edi_document_vals_list.append({
+                            'edi_format_id': edi_format.id,
+                            'move_id': move.id,
+                            'state': 'to_send',
+                        })
+
+        self.env['account.edi.document'].create(edi_document_vals_list)
+        posted.edi_document_ids._process_documents_no_web_services()
+        return posted
+    '''
 
 class SriDocumentosElectronicosQueue(models.Model):
     _name = 'account.edi.document.queue'

@@ -426,7 +426,7 @@ class AccountMove(models.Model):
             detalle = OrderedDict([
                 ('codigoPrincipal', line.product_id.default_code),
                 ('codigoAuxiliar', line.product_id.barcode),
-                ('descripcion', str(self.normalize(line.name)).replace("'","")),
+                ('descripcion', line.name and str(self.normalize(line.name)).replace("'","") or str(self.normalize(line.product_id.name)).replace("'","")),
                 ('cantidad', '{:.6f}'.format(line.quantity)),
                 ('precioUnitario', '{:.6f}'.format(line.price_unit)),
                 ('descuento', '{:.2f}'.format(line.discount)),
@@ -557,17 +557,16 @@ class AccountMove(models.Model):
         infoTributaria = self.get_infotributaria_dict(ambiente_id, tipoemision, company,claveacceso)
 
         totalConImpuestos = OrderedDict([
-            ('totalConImpuestos', []),
+            ('totalImpuesto', []),
         ])
 
         for tax in self.line_ids.filtered(lambda a: a.tax_line_id):
             if tax.tax_group_id and tax.tax_group_id.l10n_ec_type in ('vat12', 'vat14', 'zero_vat', 'not_charged_vat', 'exempt_vat', 'ice','irbpnr'):
-                totalConImpuestos['totalConImpuestos'].append(OrderedDict([
+                totalConImpuestos['totalImpuesto'].append(OrderedDict([
                     ('codigo', tax.tax_line_id.tax_group_id.l10n_ec_electronic_code),
                     ('codigoPorcentaje', tax.tax_line_id.l10n_ec_electronic_code),
-                    ('descuentoAdicional', '{:.2f}'.format(0)),
                     ('baseImponible', '{:.2f}'.format(tax.tax_base_amount)),
-                    ('tarifa', '{:.2f}'.format(tax.tax_line_id.amount)),
+                    #('tarifa', '{:.2f}'.format(tax.tax_line_id.amount)),
                     ('valor', '{:.2f}'.format(abs(tax.price_total))),
                 ]))
 
@@ -608,16 +607,14 @@ class AccountMove(models.Model):
                             other_vat_zero[tax.tax_group_id.l10n_ec_type] = {
                                 'codigo': tax.tax_group_id.l10n_ec_electronic_code,
                                 'codigoPorcentaje': tax.l10n_ec_electronic_code,
-                                'descuentoAdicional': '{:.2f}'.format(0),
-                                'baseImponible': 0.00,
                                 'tarifa': '{:.2f}'.format(0),
+                                'baseImponible': 0.00,
                                 'valor': '{:.2f}'.format(0),
                             }
                         other_vat_zero[tax.tax_group_id.l10n_ec_type]['baseImponible'] +=base
 
             detalle = OrderedDict([
-                ('codigoPrincipal', line.product_id.default_code),
-                ('codigoAuxiliar', line.product_id.barcode),
+                ('codigoInterno', line.product_id.default_code),
                 ('descripcion', str(self.normalize(line.name)).replace("'","")),
                 ('cantidad', '{:.6f}'.format(line.quantity)),
                 ('precioUnitario', '{:.6f}'.format(line.price_unit)),
@@ -637,12 +634,10 @@ class AccountMove(models.Model):
             detalles['detalle'].append(detalle)
 
         for key, total_tax in other_vat_zero.items():
-            totalConImpuestos['totalConImpuestos'].append(OrderedDict([
+            totalConImpuestos['totalImpuesto'].append(OrderedDict([
                 ('codigo', total_tax.get('codigo')),
                 ('codigoPorcentaje', total_tax.get('codigoPorcentaje')),
-                ('descuentoAdicional', total_tax.get('descuentoAdicional')),
                 ('baseImponible', '{:.2f}'.format(total_tax.get('baseImponible', 0.00))),
-                ('tarifa', total_tax.get('tarifa')),
                 ('valor', total_tax.get('valor')),
             ]))
         tipoIdentificacionComprador = partner.l10n_latam_identification_type_id.electronic_code or '05'
@@ -692,7 +687,7 @@ class AccountMove(models.Model):
                     ('@id', 'comprobante'),
                     ('@version', '1.1.0'),
                     ('infoTributaria', infoTributaria),
-                    ('infoFactura', infoNotaCredito),
+                    ('infoNotaCredito', infoNotaCredito),
                     ('detalles', detalles),
                 ]),
                 )

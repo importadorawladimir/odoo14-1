@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+       
+        <record id="bank_payment_move_tree_view" model="ir.ui.view">
+            <field name="name">ek.account.payment.history.tree</field>
+            <field name="model">ek.account.payment.history</field>
+            <field name="arch" type="xml">
+                <tree string="Historial Bancario" create="0" edit="0" delete="0" expand="context.get('expand', True)" multi_edit="1" js_class="payment_hostory_list_dashboard" sample="1">
+                    <field name="date"/>
+                    <field name="name"/>
+                    <field name="check_number"/>
+                    <field name="journal_id"/>
+                    <field name="partner_id"/>
+                    <field name="ref"/>
+                    <field name="debit" sum="Total Debito"/>
+                    <field name="credit" sum="Total Credito"/>
+
+                    <field name="check_payment_date" optional="hide"/>
+                    <field name="payment_type" optional="hide"/>
+                    <field name="company_id" optional="hide"/>
+                    <field name="state" optional="hide"/>
+                    <field name="payment_method_id" optional="hide"/>
+                    <field name="payment_method_name" optional="hide"/>
+                    <field name="check_state" optional="hide"/>
+                    <field name="check_bank_id" optional="hide"/>
+                    <field name="cancel_date" optional="hide"/>
+                    <field name="doc_type" optional="hide"/>
+                    <field name="user" optional="hide"/>
+                    <groupby name="journal_id">
+                        <button name="bank_report_day" icon="fa-file-pdf-o" title="Reporte Detallado" type="object" groups="account.group_account_invoice" context="{'journal_id': 'journal_id'}"/>
+                    </groupby>
+                </tree>
+            </field>
+        </record>
+
+        <record id="ek_account_payment_history_filter" model="ir.ui.view">
+           <field name="name">ek.account.payment.history.filter</field>
+           <field name="model">ek.account.payment.history</field>
+            <field name="arch" type="xml">
+                <search string="Historial">
+                    <field name="name"/>
+                    <field name="check_number"/>
+                    <field name="ref"/>
+                    <separator/>
+                    <group expand="0" string="Agrupar por">
+                        <filter string="Cliente/Proveedor" name="group_by_partner" domain="[]" context="{'group_by': 'partner_id'}"/>
+                        <filter string="Diario" name="group_by_journal" domain="[]" context="{'group_by': 'journal_id'}"/>
+                        <filter string="Fecha" name="groupby_date" domain="[]" context="{'group_by': 'date'}"/>
+                        <filter string="Cia" name="groupby_cia" domain="[]" context="{'group_by': 'company_id'}"/>
+                        <filter string="Estado" name="groupby_state" domain="[]" context="{'group_by': 'state'}"/>
+                        <filter string="Tipo Doc." name="groupby_doc_type" domain="[]" context="{'group_by': 'doc_type'}"/>
+                    </group>
+                </search>
+           </field>
+        </record>
+
+        <record id="bank_payment_move_act_window" model="ir.actions.act_window">
+            <field name="name">Reporte Bancario Diario</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">ek.account.payment.history</field>
+            <field name="view_mode">tree</field>
+            <field name="domain">[('date', '&gt;=', context_today().strftime('%Y-%m-%d')),('journal_id.type','in',['bank'])]</field>
+            <field name="context">{'search_default_group_by_journal': 1}</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Reporte de movimientos bancarios
+                </p>
+            </field>
+        </record>
+
+
+
+        <menuitem id="bank_payment_move_menu" parent="account.menu_finance_entries_accounting_journals" action="bank_payment_move_act_window"/>
+
+    </data>
+</odoo>

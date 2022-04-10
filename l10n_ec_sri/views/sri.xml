@@ -118,4 +118,26 @@
         action="action_documento_electronico_send"
         />
 
+    <!--Documentos de retencion-->
+    <!-- Inherit Form View to Modify it -->
+    <record id="view_account_retention_einvoice_form" model="ir.ui.view">
+        <field name="name">account.retention.einvoice</field>
+        <field name="model">account.retention</field>
+        <field name="inherit_id" ref="ek_l10n_ec_withdrawing.view_account_retention_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//page[@name='taxed']" position="after">
+                <page id="edi_documents" string="Documentos EDI" attrs="{'invisible': [('edi_document_ids', '=', [])]}">
+                    <field name="edi_document_ids">
+                        <tree create="false" delete="false" edit="false" decoration-danger="error">
+                            <field name="name"/>
+                            <field name="edi_format_name"/>
+                            <field name="state"/>
+                            <field name="error" invisible="0"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
 </odoo>

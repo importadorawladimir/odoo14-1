@@ -26,17 +26,12 @@
                   <group>
                         <field name="partner_id" select="1" required="1"/>
                         <field name="invoice_id" required="1" domain="[('retention_id','=',False), ('move_type','=','out_invoice')]"/>
-
-                        <field name="date" select="1" string="Fecha Emisión"/>
                         <field name="l10n_latam_parent_document_type_id" attrs="{'required': 1, 'invisible':[('state','=','draft')]}" />
                         <field name="company_id" groups="base.group_multi_company" readonly="1"/>
                   </group>
                   <group>
-                      <field name="ref"/>
-                    <span string="Comprobante" for="type" attrs="{'invisible':[('state','=','draft')]}"/>
-                    <div attrs="{'invisible':[('state','=','draft')]}">
-                      <field name="l10n_latam_parent_document_type_id" class="oe_inline" attrs="{'required':1, 'invisible':[('state','=','draft')]}" />
-                    </div>
+                      <field name="date" select="1" string="Fecha Emisión"/>
+                      <field name="l10n_latam_document_type_id" required="1" domain="[('l10n_ec_type','=','out_withhold')]"/>
                       <field name="move_client_id" attrs="{'readonly':1, 'invisible':[('state','=','draft')]}"/>
                       <field name="l10n_latam_document_auth"/>
                   </group>

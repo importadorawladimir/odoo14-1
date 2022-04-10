@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+
+
+        <template id="account_journal_payment_report">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="doc">
+                    <t t-call="web.external_layout">
+                        <div class="page">
+                            <h2 class="text-center">REPORTE DE MOVIMIENTOS BANCARIOS</h2>
+                            <table class="table">
+                                <tr>
+                                    <th><strong>Fecha de Corte:</strong></th>
+                                    <th><strong>Diario:</strong></th>
+                                    <th><strong>Saldo Inicial:</strong></th>
+                                </tr>
+                                <tr>
+                                    <t t-set="initial_balance" t-value="doc.get_payment_history_initial_balance()"/>
+                                    <t t-set="balance" t-value="initial_balance"/>
+                                     <t t-set="total_credit" t-value="0"/>
+                                     <t t-set="total_debit" t-value="0"/>
+                                    <t t-set="total_balance" t-value="0"/>
+                                    <th><strong><p class="m-0" t-field="doc.date"/></strong></th>
+                                    <th><strong><p class="m-0" t-field="doc.journal_id"/></strong></th>
+                                    <th><strong>$<span class="m-0" t-esc="'{0:.2f}'.format(initial_balance)"/></strong></th>
+                                </tr>
+                            </table>
+                            <br/>
+                            <table class="table table-sm table-borderer">
+                                <thead>
+                                    <tr>
+                                        <th><strong>Fecha</strong></th>
+                                        <th><strong>Comprobante</strong></th>
+                                        <th><strong>Beneficiario</strong></th>
+                                        <th><strong>Descripcion</strong></th>
+                                        <th><strong>Debito</strong></th>
+                                        <th><strong>Credito</strong></th>
+                                        <th><strong>Saldo</strong></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="doc.get_payment_history_lines()" t-as="hy">
+                                        <td><span class="m-0" t-field="hy.date"/><t t-if="hy.state =='cancel'"><b style="color: red;">*</b></t></td>
+                                        <td><span class="m-0" t-field="hy.name"/><t t-if="hy.state =='cancel'"><b style="color: red;">*</b></t></td>
+                                        <td><span class="m-0" t-field="hy.partner_id"/></td>
+                                        <td><span class="m-0" t-field="hy.ref"/><t t-if="hy.state =='cancel'"><b style="color: red;">*</b></t></td>
+                                        <td class="text-rigth"><span class="text-rigth" t-field="hy.debit"/><t t-if="hy.state =='cancel'"><b style="color: red;">*</b></t></td>
+                                        <td class="text-rigth"><span class="text-rigth" t-field="hy.credit"/><t t-if="hy.state =='cancel'"><b style="color: red;">*</b></t></td>
+
+                                        <t t-set="balance" t-value="balance + (hy.debit - hy.credit)"/>
+                                        <td class="text-rigth">$<span class="text-rigth" t-esc="'{0:.2f}'.format(balance)"/><t t-if="hy.state =='cancel'"><b style="color: red;">*</b></t></td>
+
+                                        <t t-set="total_credit" t-value="total_credit + hy.credit"/>
+                                        <t t-set="total_debit" t-value="total_debit + hy.debit"/>
+
+                                    </tr>
+                                </tbody>
+                                <tfooter>
+                                    <tr>
+                                        <td colspan="4"></td>
+                                        <td class="text-rigth">$<span class="text-rigth" t-esc="'{0:.2f}'.format(total_debit)"/></td>
+                                        <td class="text-rigth">$<span class="text-rigth" t-esc="'{0:.2f}'.format(total_credit)"/></td>
+                                        <td></td>
+                                    </tr>
+                                </tfooter>
+                            </table>
+                             <br/> <br/>
+                            <table class="table">
+                                <tr>
+                                    <td><b>Notas de Crédito:</b> $<span class="text-rigth" t-esc="'{0:.2f}'.format(doc.get_bank_credit_note())"/></td>
+                                    <td><b>Depositos:</b> $<span class="text-rigth" t-esc="'{0:.2f}'.format(doc.get_deposit_today())"/></td>
+                                    <td></td>
+                                </tr>
+                                 <tr>
+                                    <td><b>Notas de Débito:</b> $<span class="text-rigth" t-esc="'{0:.2f}'.format(doc.get_bank_debit_note())"/></td>
+                                     <td><b>Cheques Al Dia:</b> $<span class="text-rigth" t-esc="'{0:.2f}'.format(doc.get_check_today())"/></td>
+                                     <td><b>Saldo:</b> $<span class="text-rigth" t-esc="'{0:.2f}'.format(balance)"/></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </t>
+                </t>
+                <div class="footer"/>
+            </t>
+        </template>
+
+
+        <report
+                id="report_account_journal_payment_report"
+                model="ek.account.payment.wizard"
+                string="Reporte de movimientos bancarios"
+                name="ek_bank_payment_move_report.account_journal_payment_report"
+                file="ek_bank_payment_move_report.account_journal_payment_report"
+                report_type="qweb-pdf"/>
+    </data>
+</odoo>

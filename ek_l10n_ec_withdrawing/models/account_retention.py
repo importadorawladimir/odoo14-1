@@ -20,11 +20,11 @@ class AccountRetention(models.Model):
     ], string='Type', required=True, store=True, index=True, readonly=True, tracking=True,
         default="ret_in_invoice", change_default=True)
 
-    l10n_latam_document_type_id = fields.Many2one('l10n_latam.document.type', 'Tipo de Comprobante')
+    l10n_latam_document_type_id = fields.Many2one('l10n_latam.document.type', 'Tipo de Comprobante', readonly=True, states={'draft': [('readonly', False)]},)
 
-    l10n_latam_parent_document_type_id = fields.Many2one('l10n_latam.document.type', 'Doc.', related='invoice_id.l10n_latam_document_type_id',)
+    l10n_latam_parent_document_type_id = fields.Many2one('l10n_latam.document.type', 'Tipo doc. referencia', related='invoice_id.l10n_latam_document_type_id',)
 
-    name = fields.Char(string='Number', copy=False, readonly=False, store=True, index=True,
+    name = fields.Char(string='Number', copy=False, readonly=True, store=True, index=True,
                        tracking=True, default="/", states={'draft': [('readonly', False)]},)
 
     company_id = fields.Many2one(
@@ -191,6 +191,10 @@ class AccountRetention(models.Model):
             if wd.move_type not in ['ret_out_invoice']:
 
                 sequence = wd.journal_id.retention_sequence_id
+
+                if not sequence:
+                    raise ValidationError(
+                        u"Verifique que el diario usado tenga la configurado la autorización de retenciones y/o la misma sea valida.")
 
                 if wd.name and wd.name != '/' and not number:
                     wd_number = wd.name

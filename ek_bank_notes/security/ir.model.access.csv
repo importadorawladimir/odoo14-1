@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ek_bank_notes_user,ek.bank.notes,model_ek_bank_notes,account.group_account_user,1,1,1,1
+access_ek_bank_notes_lines_user,ek.bank.notes.lines,model_ek_bank_notes_lines,account.group_account_user,1,1,1,1
+access_ek_bank_notes_operations_user,ek.bank.notes.operations,model_ek_bank_notes_operations,account.group_account_user,1,1,1,1
