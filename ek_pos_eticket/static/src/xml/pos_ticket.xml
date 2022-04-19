@@ -19,7 +19,7 @@
                 </h2>
             </t>
         </xpath>
-            <xpath expr="//t[@t-if='receipt.company.vat']" position="replace">
+        <xpath expr="//t[@t-if='receipt.company.vat']" position="replace">
             <div class="afip-info">
                 <t t-if="receipt.invoice_id">
                    <div>RUC: <t t-esc="receipt.company.vat"/></div>
@@ -35,15 +35,14 @@
         </xpath>
 
 
-
         <xpath expr="//div[hasclass('pos-receipt')]/br" position="replace">
 
         </xpath>
-            <xpath expr="//div[hasclass('pos-receipt')]/br[1]" position="replace">
+        <xpath expr="//div[hasclass('pos-receipt')]/br[1]" position="replace">
 
         </xpath>
 
-            <xpath expr="//t[@t-if='receipt.cashier']" position="replace">
+        <xpath expr="//t[@t-if='receipt.cashier']" position="replace">
 
                 <t t-if="receipt.invoice_id">
                     <div class="afip-invoice-info">
@@ -91,9 +90,23 @@
                         IMPORTE</div>
                     </strong>
                 <hr/>
-
         </xpath>
-            <xpath expr="//div[hasclass('before-footer')]" position="after">
+        <xpath expr="//t[@t-esc='tax.name']" position="after">
+            <span> en <t t-esc="env.pos.format_currency(tax.base)" /></span>
+        </xpath>
+
+        <xpath expr="//div[hasclass('pos-receipt-amount')]" position="before">
+            <t t-foreach="receipt.tax_details" t-as="tax" t-key="tax.name">
+                    <div class="pos-receipt-amount">
+                        Subtotal
+                        <t t-esc="tax.name" />
+                        <span t-esc='env.pos.format_currency_no_symbol(tax.base)'
+                              class="pos-receipt-right-align"/>
+                    </div>
+                </t>
+        </xpath>
+
+        <xpath expr="//div[hasclass('before-footer')]" position="after">
             <div class="pos-center-align">
                 <b>*** DOCUMENTO SIN VALIDEZ TRIBUTARIA ***</b>
                 <br/>

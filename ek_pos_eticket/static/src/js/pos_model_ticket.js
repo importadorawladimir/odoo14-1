@@ -34,7 +34,6 @@ odoo.define('ek_pos_eticket.pos_model_ticket', function (require) {
                     var order = self.env.pos.get_order();
                 //if (this.env.pos.config.receipt_invoice_number)
                 data.then(function (order_server_id) {
-
                     rpc.query({
                         model: 'pos.order',
                         method: 'read',
@@ -108,6 +107,25 @@ odoo.define('ek_pos_eticket.pos_model_ticket', function (require) {
 
     });
     pos_model.Order = pos_model.Order.extend({
+        get_base_ec_by_tax: function () {
+                var base_by_tax = {};
+                this.get_orderlines().forEach(function (line) {
+                    var tax_detail = line.get_tax_details();
+                    var base_price = line.get_price_without_tax();
+                    if (tax_detail) {
+                        Object.keys(tax_detail).forEach(function (tax) {
+                            if (Object.keys(base_by_tax).includes(tax)) {
+                                base_by_tax[tax] += base_price;
+                            } else {
+                                base_by_tax[tax] = base_price;
+                            }
+                        });
+                    }
+                });
+                console.log('BASE X IMPUESTO');
+                console.log(base_by_tax);
+                return base_by_tax;
+            },
         export_for_printing: function () {
             var self = this;
             var receipt = SuperOrder.export_for_printing.call(this);
@@ -115,6 +133,11 @@ odoo.define('ek_pos_eticket.pos_model_ticket', function (require) {
                 var invoice_id = self.invoice_id;
                 var invoice = invoice_id.split("(")[0];
                 var invoice = invoice.replace(/[^0-9]/g, '');
+                if (invoice.length === 15) {
+                        var invoice = invoice.substring(0,3)+"-"+invoice.substring(3,6)+"-"+invoice.substring(6);
+                    }
+
+
                 var invoice_number = "";
                 var invoice_letter = "";
                 invoice_number = invoice_id.split("(")[0];
@@ -125,10 +148,15 @@ odoo.define('ek_pos_eticket.pos_model_ticket', function (require) {
                 receipt.street = street;
                 receipt.city = city;
                 receipt.invoice_id = invoice;
-                   receipt.country=country;
+                receipt.country=country;
                 receipt.l10n_latam_document_type_id = l10n_latam_document_type_id;
                 receipt.invoice_date_due = invoice_date_due;
-
+                var base_by_tax = this.get_base_ec_by_tax();
+                for (const tax of receipt.tax_details) {
+                    tax.base = base_by_tax[tax.tax.id];
+                    console.log('>>>');
+                    console.log(base_by_tax[tax.tax.id]);
+                }
 
 
             }
