@@ -232,7 +232,7 @@ class AccountCheck(models.Model):
         readonly=True,
         states={'draft': [('readonly', False)]}
     )
-    amount = fields.Monetary(
+    amount = fields.Monetary(string='Monto',
         currency_field='currency_id',
         readonly=True,
         states={'draft': [('readonly', False)]}
@@ -290,6 +290,11 @@ class AccountCheck(models.Model):
         readonly=True,
         copy=False
     )
+
+    printer_data = fields.Html(string="Texto Impresión",  )
+
+    def dummy(self):
+        pass
 
     def get_bank_vals(self, action, journal):
         self.ensure_one()

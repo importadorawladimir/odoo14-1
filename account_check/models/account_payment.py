@@ -16,7 +16,8 @@ from odoo.exceptions import UserError, ValidationError
 import logging
 # import odoo.addons.decimal_precision as dp
 _logger = logging.getLogger(__name__)
-
+import re
+from num2words import num2words
 
 class AccountPayment(models.Model):
 
@@ -66,11 +67,13 @@ class AccountPayment(models.Model):
         copy=False,
         states={'draft': [('readonly', False)]},
     )
-    check_number = fields.Integer(
+    check_number = fields.Char(
         'Numero',
         readonly=True,
         states={'draft': [('readonly', False)]},
         copy=False,
+        compute=False,
+        inverse=False,
     )
     check_issue_date = fields.Date(
         'Fecha Emision',
@@ -123,6 +126,14 @@ class AccountPayment(models.Model):
     checkbook_numerate_on_printing = fields.Boolean(
         related='checkbook_id.numerate_on_printing',
     )
+
+    printer_data = fields.Html(related='check_id.printer_data',
+                               string="Texto Impresión",
+                               store=True,readonly=True)
+
+
+
+
     # TODO borrar, esto estaria depreciado
     # checkbook_block_manual_number = fields.Boolean(
     #     related='checkbook_id.block_manual_number',
@@ -158,7 +169,7 @@ class AccountPayment(models.Model):
             AccountPayment,
             (self - check_payments))._compute_payment_method_description()
 
-# on change methods
+    # on change methods
 
     @api.constrains('check_ids')
     @api.onchange('check_ids', 'payment_method_code')
@@ -205,14 +216,21 @@ class AccountPayment(models.Model):
         return ('%%0%sd' % padding % number)
 
     @api.onchange('check_number')
-    def _change_check_number(self):
+    def change_check_number(self):
         # TODO make default padding a parameter
+        def _get_name_from_number(number):
+            padding = 8
+            if len(str(number)) > padding:
+                padding = len(str(number))
+            #return ('%%0%' % padding % number)
+            return str(padding) + str(number)
+
         for rec in self:
             if rec.payment_method_code in ['received_third_check']:
                 if not rec.check_number:
                     check_name = False
                 else:
-                    check_name = self._get_namecheck_from_number(rec.check_number)
+                    check_name = _get_name_from_number(rec.check_number)
                 rec.check_name = check_name
             elif rec.payment_method_code in ['issue_check']:
                 sequence = rec.checkbook_id.sequence_id
@@ -226,7 +244,7 @@ class AccountPayment(models.Model):
                     check_name = rec.checkbook_id.sequence_id.next_by_id()
                 else:
                     # in sipreco, for eg, no sequence on checkbooks
-                    check_name = self._get_namecheck_from_number(rec.check_number)
+                    check_name = _get_name_from_number(rec.check_number)
                 rec.check_name = check_name
 
     @api.onchange('check_issue_date', 'check_payment_date')
@@ -237,16 +255,6 @@ class AccountPayment(models.Model):
             self.check_payment_date = False
             raise UserError(
                 _('Check Payment Date must be greater than Issue Date'))
-
-    # @api.onchange('check_owner_vat')
-    # def onchange_check_owner_vat(self):
-    #     """
-    #     We suggest owner name from owner vat
-    #     """
-    #     # if not self.check_owner_name:
-    #     self.check_owner_name = self.search(
-    #         [('check_owner_vat', '=', self.check_owner_vat)],
-    #         limit=1).check_owner_name
 
     @api.onchange('partner_id', 'payment_method_code')
     def onchange_partner_check(self):
@@ -556,6 +564,7 @@ class AccountPayment(models.Model):
             #raise ValidationError('estamos aca %s'%(rec.payment_method_id.code))
             if rec.payment_method_id.code in ['received_third_check','delivered_third_check','issue_check']:
                 rec.do_checks_operations()
+                rec.print_checks_matrix()
         return res
 
     def _get_liquidity_move_line_vals(self, amount):
@@ -569,57 +578,99 @@ class AccountPayment(models.Model):
         vals = self.do_checks_operations(vals=vals)
         return vals
 
-    def do_print_checks(self):
-        # si cambiamos nombre de check_report tener en cuenta en sipreco
-        checkbook = self.mapped('checkbook_id')
-        # si todos los cheques son de la misma chequera entonces buscamos
-        # reporte específico para esa chequera
-        report_name = len(checkbook) == 1 and  \
-            checkbook.report_template.report_name \
-            or 'check_report'
-        check_report = self.env['ir.actions.report'].search(
-            [('report_name', '=', report_name)], limit=1).report_action(self)
-        # ya el buscar el reporte da el error solo
-        # if not check_report:
-        #     raise UserError(_(
-        #       "There is no check report configured.\nMake sure to configure "
-        #       "a check report named 'account_check_report'."))
-        return check_report
+    def l10n_ec_edi_amount_to_text(self,amount_ind):
+        """Transform a float amount to text words on peruvian format: AMOUNT IN TEXT 11/100
+        :returns: Amount transformed to words peruvian format for invoices
+        :rtype: str
+        """
+        self.ensure_one()
+        amount_i, amount_d = divmod(amount_ind, 1)
+        amount_d = int(round(amount_d * 100, 2))
+        words = num2words(amount_i, lang='es')
+        result = '%(words)s Y %(amount_d)02d/100 %(currency_name)s' % {
+            'words': words,
+            'amount_d': amount_d,
+            'currency_name':  self.currency_id.currency_unit_label,
+        }
+        return result.upper()
 
-    def print_checks(self):
-        if len(self.mapped('checkbook_id')) != 1:
-            raise UserError(_(
-                "In order to print multiple checks at once, they must belong "
-                "to the same checkbook."))
-        # por ahora preferimos no postearlos
-        # self.filtered(lambda r: r.state == 'draft').post()
+    def render_check_print(self):
+        context = self._context.copy()
 
-        # si numerar al imprimir entonces llamamos al wizard
-        if self[0].checkbook_id.numerate_on_printing:
-            if all([not x.check_name for x in self]):
-                next_check_number = self[0].checkbook_id.next_number
-                return {
-                    'name': _('Print Pre-numbered Checks'),
-                    'type': 'ir.actions.act_window',
-                    'res_model': 'print.prenumbered.checks',
-                    'view_type': 'form',
-                    'view_mode': 'form',
-                    'target': 'new',
-                    'context': {
-                        'payment_ids': self.ids,
-                        'default_next_check_number': next_check_number,
-                    }
-                }
-            # si ya están enumerados mandamos a imprimir directamente
-            elif all([x.check_name for x in self]):
-                return self.do_print_checks()
-            else:
+        id_res = self.check_id
+
+        checkbook_id = self.checkbook_id
+        MailTemplates = self.env["mail.template"]
+        company_currency = self.company_id.currency_id
+        partner_name = self.partner_id.name
+        check_amount_in_words=False
+        if company_currency:
+            # check_amount_in_words = company_currency.amount_to_text(self.amount)
+            check_amount_in_words = self.l10n_ec_edi_amount_to_text(self.amount)
+        context.update({"monto_letras": check_amount_in_words,
+                        "nombre_corto": partner_name[0:30]})
+
+        content = MailTemplates.with_context(context)._render_template(
+            checkbook_id.content, "account.payment", [self.id])[self.id]
+        id_res.write({'printer_data': content})
+
+    def dummy(self):
+        pass
+
+    def update_checks_matrix(self):
+        '''
+        Funcion para generar render de Cheque
+        :return:
+        '''
+        if self[0].checkbook_id and self[0].checkbook_id.content:
+                content = self.printer_data
+                self.render_check_print()
+                self.message_post(
+                    body=_(
+                        u"Actualización de Impresión de cheque, se ha dejado de usar la siguiente informacion: <ul><li> %s</li></ul>"
+                    ) % (content)
+                )
+    def print_checks_matrix(self):
+        '''
+        Funcion para generar render de Cheque
+        :return:
+        '''
+        if self[0].checkbook_id:
+            if len(self.mapped('checkbook_id')) != 1:
                 raise UserError(_(
-                    'Está queriendo imprimir y enumerar cheques que ya han '
-                    'sido numerados. Seleccione solo cheques numerados o solo'
-                    ' cheques sin número.'))
-        else:
-            return self.do_print_checks()
+                    "Para imprimir varios cheques a la vez, deben pertenecer "
+                     "a la misma chequera"))
+            # por ahora preferimos no postearlos
+            # self.filtered(lambda r: r.state == 'draft').post()
+
+            # si numerar al imprimir entonces llamamos al wizard
+            if self[0].checkbook_id.numerate_on_printing:
+                raise UserError(_(
+                    "Debe Configurar la numeracion en Impresion, consulte con su Administrador"))
+                if all([not x.check_name for x in self]):
+                    next_check_number = self[0].checkbook_id.next_number
+                    return {
+                        'name': _('Print Pre-numbered Checks'),
+                        'type': 'ir.actions.act_window',
+                        'res_model': 'print.prenumbered.checks',
+                        'view_type': 'form',
+                        'view_mode': 'form',
+                        'target': 'new',
+                        'context': {
+                            'payment_ids': self.ids,
+                            'default_next_check_number': next_check_number,
+                        }
+                    }
+                # si ya están enumerados mandamos a imprimir directamente
+                elif all([x.check_name for x in self]):
+                    return self.do_print_checks()
+                else:
+                    raise UserError(_(
+                        'Está queriendo imprimir y enumerar cheques que ya han '
+                        'sido numerados. Seleccione solo cheques numerados o solo'
+                        ' cheques sin número.'))
+            elif self[0].checkbook_id.content:
+                self.render_check_print()
 
     def _get_counterpart_move_line_vals(self, invoice=False):
         '''

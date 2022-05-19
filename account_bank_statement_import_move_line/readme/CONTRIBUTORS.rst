@@ -5,3 +5,7 @@
   * João Marques
 
 * Pedro Gonzalez <pegonzalezs@gmail.com>
+
+* Ekuasoft:
+
+  * Cristhian Luzon <@cristhian_70>

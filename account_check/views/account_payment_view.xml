@@ -31,28 +31,36 @@
             deposit y tal vez directamente hacemos que los pagos sean uno a uno con los cheques total
             se pueden agregar varios pagosen un payment group, tal vez para transfers usamos tambien
             payments groups -->
-            <field name='ref' position="after">
-                <div colspan="2"
-                     attrs="{'invisible': [('payment_method_code', 'not in', ['received_third_check', 'delivered_third_check', 'issue_check'])]}">
-                    <group name="checks">
+            <xpath expr="//button[@name='action_post']" position="before">
+
+                <button string="Imprimir Cheque" icon="fa-print"
+                        attrs="{'invisible': ['|', ('payment_method_code', '!=', 'issue_check'),
+                            ('state', '!=', 'posted')]}"
+                        groups="account_check.group_user_print_check"
+                        type="object" name="dummy" custom="print-html"/>
+            </xpath>
+
+
+            <xpath expr="//group[1]" position="after">
+                <group string="Detalle Cheques"
+                       attrs="{'invisible': [('payment_method_code', 'not in', ['received_third_check', 'delivered_third_check', 'issue_check'])]}">
+                    <group name="checks" colspan="2">
                         <field name="check_id" attrs="{'invisible': [('check_id', '=', False)]}"/>
                         <!-- no usamos el widget many2many_tags porque les interesa filtrar y buscar por montos y demas -->
                         <!-- creamos un campo copy por compatibilidad con mig de v8 donde se podia mas de un cheque por payment, igualmente se podria unir todo en chekc_ids pero era medio complicada la consulta -->
-<!--                        <field name="check_ids"-->
-<!--                               attrs="{'invisible': ['|',  '|', ('check_ids', '=', []), ('check_id', '!=', False), ('payment_method_code', 'not in', ['received_third_check', 'issue_check'])]}">-->
-<!--                            <tree edit="false" create="false">-->
-<!--                                <field name="name"/>-->
-<!--                                <field name="payment_date"/>-->
-<!--                                <field name="amount" sum="Total"/>-->
-<!--                                <field name="state" invisible="1"/>-->
-<!--                                <field name="currency_id" invisible="1"/>-->
-<!--                            </tree>-->
-<!--                        </field>-->
+                        <!--                        <field name="check_ids"-->
+                        <!--                               attrs="{'invisible': ['|',  '|', ('check_ids', '=', []), ('check_id', '!=', False), ('payment_method_code', 'not in', ['received_third_check', 'issue_check'])]}">-->
+                        <!--                            <tree edit="false" create="false">-->
+                        <!--                                <field name="name"/>-->
+                        <!--                                <field name="payment_date"/>-->
+                        <!--                                <field name="amount" sum="Total"/>-->
+                        <!--                                <field name="state" invisible="1"/>-->
+                        <!--                                <field name="currency_id" invisible="1"/>-->
+                        <!--                            </tree>-->
+                        <!--                        </field>-->
                         <label for="check_ids" colspan="2"
                                attrs="{'invisible': ['|', ('payment_method_code', '!=', 'delivered_third_check'), ('is_internal_transfer', '=', False)]}"/>
-                        <field name="check_ids"
-                               nolabel="1" colspan="2"
-                               options="{'no_create': True}"
+                        <field name="check_ids" nolabel="1" colspan="2" options="{'no_create': True}"
                                domain="[('journal_id', '=', journal_id), ('state', '=', 'holding'), ('type', '=', 'third_check')]"
                                attrs="{'invisible': ['|', '|',('payment_method_code', '!=', 'delivered_third_check'), ('payment_type', 'not in', ['transfer', 'outbound']),('is_internal_transfer', '=', False)], 'required': [('payment_method_code', '=', 'delivered_third_check'), ('payment_type', 'in', ['transfer', 'outbound']),  ('state', '!=', 'cancelled')]}">
                             <tree edit="false">
@@ -64,7 +72,7 @@
                             </tree>
                         </field>
                     </group>
-                    <group name="check_data" states='draft'>
+                    <group name="check_data" states="draft" colspan="2">
                         <newline/>
                         <field name="checkbook_id" options="{'no_create': True, 'no_open': True}"
                                attrs="{'invisible': [('payment_method_code', 'not in', ['issue_check'])], 'required': [('payment_method_code', 'in', ['issue_check'])]}"
@@ -84,8 +92,25 @@
                         <field name="check_owner_name"
                                attrs="{'invisible': [('payment_method_code', 'not in', ['received_third_check'])],  'required': [('payment_method_code', 'in', ['received_third_check'])]}"/>
                     </group>
-                </div>
-            </field>
+                    <group colspan="2" groups="account_check.group_user_print_check" name="check_print"
+                           string="Impresión de Cheque" attrs="{'invisible': [('check_id', '=', False)]}">
+                        <newline/>
+                        <div colspan="2">
+                            <button name="update_checks_matrix" class="oe_link oe_inline" help="Actualizar los datos de Impresión"
+                                    icon="fa-repeat"
+                                    groups="account_check.group_usr_update_print_check"
+                                    attrs="{'invisible': ['|', ('payment_method_code', '!=', 'issue_check'),  ('state', '!=', 'posted')]}"
+                                    string="" type="object"/>
+                            <label for="printer_data" string="Vista previa de impresión:" class="oe_inline"/>
+                        </div>
+                        <newline/>
+
+                        <field name="printer_data" nolabel="1" colspan="2"/>
+
+                    </group>
+                </group>
+            </xpath>
+
             <label for="amount" position="before">
                 <label for="amount" attrs="{'invisible': [('payment_method_code', '!=', 'delivered_third_check')]}"/>
                 <div name="readonly_amount_div" class="o_row"

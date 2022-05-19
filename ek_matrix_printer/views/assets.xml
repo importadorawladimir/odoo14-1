@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+    <template id="assets_backend"
+              inherit_id="web.assets_backend"
+              name="ek_matrix_printer assets">
+        <xpath expr="." position="inside">
+
+            <script
+                    type="text/javascript"
+                    src="/ek_matrix_printer/static/src/lib/jQuery.print.js"
+            />
+
+            <script type="text/javascript" src="/ek_matrix_printer/static/src/js/print.js"></script>
+        </xpath>
+    </template>
+
+
+</odoo>

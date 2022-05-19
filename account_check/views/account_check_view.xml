@@ -123,7 +123,9 @@
                                    string="Compañía"/>
                         </group>
                     </group>
-                    <group string="Operaciones">
+                    <notebook>
+                        <page string="Detalle">
+                            <group string="Operaciones">
                         <field name="operation_ids" nolabel="1" readonly="1">
                             <tree>
                                 <field name="date" string="Fecha"/>
@@ -142,10 +144,24 @@
                             </form>
                         </field>
                     </group>
+                        </page>
+                        <page string="Matricial">
+                            <button string="Imprimir Matr." icon="fa-print" type="object" name="dummy" custom="print-html"/>
+
+                            <pre>
+                                <field name="printer_data" widget="html"/>
+                            </pre>
+                        </page>
+                    </notebook>
+
+
                     <group string="Documentos Contables">
-                        <field name="customer_reject_move_id" readonly="1" attrs="{'invisible':[('type','!=','third_check')]}"/>
-                        <field name="supplier_reject_move_id" readonly="1" attrs="{'invisible':[('type','!=','issue_check')]}"/>
-                        <field name="expense_account_move_id" readonly="1" attrs="{'invisible':[('type','!=','third_check')]}"/>
+                        <field name="customer_reject_move_id" readonly="1"
+                               attrs="{'invisible':[('type','!=','third_check')]}"/>
+                        <field name="supplier_reject_move_id" readonly="1"
+                               attrs="{'invisible':[('type','!=','issue_check')]}"/>
+                        <field name="expense_account_move_id" readonly="1"
+                               attrs="{'invisible':[('type','!=','third_check')]}"/>
 
                     </group>
                 </sheet>

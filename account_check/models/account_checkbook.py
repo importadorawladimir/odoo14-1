@@ -34,7 +34,7 @@ class AccountCheckbook(models.Model):
         context={'default_code': 'issue_check'},
     )
     next_number = fields.Integer(
-        'Siguiente Numero',
+        'Siguiente Número',
         # usamos compute y no related para poder usar sudo cuando se setea
         # secuencia sin necesidad de dar permiso en ir.sequence
         compute='_compute_next_number',
@@ -42,7 +42,7 @@ class AccountCheckbook(models.Model):
     )
     issue_check_subtype = fields.Selection(
         [('deferred', 'Diferidos'), ('currents', 'Corrientes')],
-        string='Tipo de Cheque Propio',
+        string='Tipo de Chequera',
         required=True,
         default='deferred',
         help='* Con cheques corrientes el asiento generado por el pago '
@@ -66,7 +66,7 @@ class AccountCheckbook(models.Model):
     )
     debit_journal_id = fields.Many2one(
         'account.journal', 'Diario de Debito del Cheque Propio',
-        help='It will be used to make the debit of the check on checks ',
+        help='Diario del cual se realizara el debito del cheque ',
         readonly=True,
         required=False,
         domain=[('type', '=', 'bank')],
@@ -92,7 +92,7 @@ class AccountCheckbook(models.Model):
         readonly=True,
     )
     state = fields.Selection(
-        [('draft', 'Draft'), ('active', 'In Use'), ('used', 'Used')],
+        [('draft', 'Borrador'), ('active', 'En uso'), ('used', 'Usado')],
         string='Estado',
         # readonly=True,
         default='draft',
@@ -108,11 +108,10 @@ class AccountCheckbook(models.Model):
     )
     numerate_on_printing = fields.Boolean(
         default=False,
-        string='Numerate on printing?',
+        string='Numerar en impresion?',
         # readonly=True,
         # states={'draft': [('readonly', False)]},
-        help='No number will be assigne while creating payment, number will be'
-        'assigned after printing check.'
+        help='No se asignará ningún número al crear el pago, el número se asignará después de imprimir el cheque.'
     )
     report_template = fields.Many2one(
         'ir.actions.report',
@@ -122,6 +121,7 @@ class AccountCheckbook(models.Model):
         help='Report to use when printing checks. If not report selected, '
         'report with name "check_report" will be used',
     )
+    content = fields.Html(string="Plantilla")
 
     @api.depends('sequence_id.number_next_actual')
     def _compute_next_number(self):

@@ -39,13 +39,14 @@ class AccountPaymentRegister(models.TransientModel):
     )
     check_name = fields.Char(
         'Nombre',
-
         copy=False,
-
     )
-    check_number = fields.Integer(
-        'Numero',
+    check_number = fields.Char(
+        'Numero de Cheque',
+        default=False,
         copy=False,
+        compute=False,
+        inverse=False,
     )
     check_issue_date = fields.Date(
         'Fecha Emision',
@@ -209,9 +210,6 @@ class AccountPaymentRegister(models.TransientModel):
             else:
                 rec.check_number = False
 
-
-
-
     def action_create_payments(self):
         for rec in self:
             if rec.check_ids and not rec.currency_id.is_zero(
@@ -229,10 +227,6 @@ class AccountPaymentRegister(models.TransientModel):
         res = super().action_create_payments()
 
         return
-
-
-
-
 
     def _create_payment_vals_from_wizard(self):
         payment_vals = super()._create_payment_vals_from_wizard()

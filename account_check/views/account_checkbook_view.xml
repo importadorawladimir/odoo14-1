@@ -5,7 +5,7 @@
         <field name="name">account.checkbook.tree</field>
         <field name="model">account.checkbook</field>
         <field name="arch" type="xml">
-            <tree string="Checkbooks" editable="bottom">
+            <tree string="Checkbooks">
                 <field name="issue_check_subtype"/>
                 <field name="name"/>
                 <field name="debit_journal_id" domain="[('type', '=', 'bank')]"
@@ -38,9 +38,77 @@
                         <field name="bank_id"/>
                         <field name="range_to"/>
                         <field name="numerate_on_printing"/>
+
+
                         <!-- <field name="block_manual_number"/> -->
-                        <field name="report_template"/>
+
+                        <!--                        <field name="report_template"/>-->
                     </group>
+                    <notebook>
+                        <page string="Plantilla Impresión" groups="account_check.group_manager_print_check">
+                            <group>
+                                <field name="content" widget="html" groups="account_check.group_manager_print_check"/>
+                            </group>
+                        </page>
+                        <page string="Ayuda" name="help">
+                            <group colspan="2">
+                                <p colspan="2">
+                                    Ayuda para la configuracion de plantillas de cheque
+
+                                </p>
+                                <separator string="Ejemplos más comunes" colspan="2"/>
+                                <table class="table tabla-sm" colspan="2">
+                                    <tr>
+                                        <th>Campos</th>
+                                        <td>Para usar los campos disponibles en el pago use inicialmente la palabra "object"
+                                            Usando la siguiente sintaxis:
+                                            <b>
+                                                Ejemplo:
+                                            </b>
+                                            <ul>
+                                                <li> Para obtener la informacion del cliente: <code>${object.partner_id.name}</code></li>
+
+                                            </ul>
+                                            <ul>
+                                                <li> Para obtener informacion del cheque use: <code>${object.check_id.name}</code></li>
+                                            </ul>
+
+
+
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Nombre Corto</th>
+                                        <td>Para usar el nombre del cliente/proveedor cortado a 30 caracteres
+                                            <b>Ejemplo: </b>
+                                            <code>${ctx.get('nombre_corto', 's/n')}</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Monto en Letras</th>
+                                        <td>Para obtener el monto en letras use la siguiente sintaxis
+                                            <b>Ejemplo: </b>
+                                            <code>${ctx.get('monto_letras', 's/n')}</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <td>Para usar los campos de fecha con el formato de la configuracion de la empresa
+                                            <b>Ejemplo: </b>
+                                            <code>${format_date(object.date)}</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Monto</th>
+                                        <td>Para obtener el monto con la moneda de la empresa y cantidad de decimales configurados:
+                                            <b>Ejemplo: </b>
+                                            <code>${format_amount(object.amount, object.currency_id)}</code>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </group>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>

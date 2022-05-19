@@ -34,7 +34,7 @@
     'images': [
     ],
     'depends': [
-        'account', 'base', 'ek_l10n_ec'
+        'account', 'base', 'ek_l10n_ec','ek_matrix_printer'
     ],
     'data': [
         'data/account_payment_method_data.xml',

@@ -30,8 +30,8 @@ class AccountStatementLineCreate(models.TransientModel):
     move_date = fields.Date(string="Move Date", default=fields.Date.context_today)
     move_line_ids = fields.Many2many("account.move.line", string="Move Lines")
 
-    only_debit_account_id = is_new_field = fields.Boolean(string="Solo Cuenta de recibos pendientes	del Diario",  )#payment_debit_account_id
-    only_credit_account_id = is_new_field = fields.Boolean(string="Solo Cuentas de Pago del Diario",  ) #payment_credit_account_id
+    only_debit_account_id = fields.Boolean(string="Solo Cuenta de recibos pendientes	del Diario",  )#payment_debit_account_id
+    only_credit_account_id = fields.Boolean(string="Solo Cuentas de Pago del Diario",  ) #payment_credit_account_id
 
     @api.model
     def default_get(self, field_list):
@@ -80,9 +80,13 @@ class AccountStatementLineCreate(models.TransientModel):
             ]
         elif self.date_type == "move":
             domain.append(("date", "<=", self.move_date))
+        account_ids=[]
         if self.only_debit_account_id:
-            domain.append(("account_id", "in", [x.payment_debit_account_id.id for x in self.journal_ids]))
-
+            account_ids.extend([x.payment_debit_account_id.id for x in self.journal_ids])
+        if self.only_credit_account_id:
+            account_ids.extend([x.payment_credit_account_id.id for x in self.journal_ids])
+        if account_ids:
+            domain.append(("account_id", "in", account_ids))
         if self.invoice:
             domain.append(("move_id", "!=", False))
         #TODO REVIEW WITH BUSSINESS MOvE_ID

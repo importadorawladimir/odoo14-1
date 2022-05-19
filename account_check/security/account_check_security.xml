@@ -1,18 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data noupdate="1">
+
+        <record model="ir.module.category" id="module_account_check">
+            <field name="name">Gestión de Cheques</field>
+            <field name="sequence">600</field>
+        </record>
+
+        <record id="group_user_print_check" model="res.groups">
+            <field name="name">Impresión de Cheques</field>
+            <field name="category_id" ref="module_account_check"/>
+        </record>
+
+        <record id="group_usr_update_print_check" model="res.groups">
+            <field name="name">Actualización de Impresión</field>
+            <field name="implied_ids"
+                   eval="[(4, ref('account_check.group_user_print_check'))]"/>
+            <field name="category_id" ref="module_account_check"/>
+        </record>
+
+        <record id="group_manager_print_check" model="res.groups">
+            <field name="name">Administrador de Impresión de Cheques</field>
+            <field name="implied_ids"
+                   eval="[(4, ref('account_check.group_usr_update_print_check'))]"/>
+            <field
+                    name="users"
+                    eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"
+            />
+            <field name="category_id" ref="module_account_check"/>
+        </record>
+
         <record id="account_check_rule" model="ir.rule">
             <field name="name">Check Multi-Company</field>
             <field name="model_id" ref="model_account_check"/>
             <field eval="True" name="global"/>
-            <field name="domain_force">['|',('company_id','=',False),('company_id','child_of',[user.company_id.id])]</field>
+            <field name="domain_force">['|',('company_id','=',False),('company_id','child_of',[user.company_id.id])]
+            </field>
         </record>
 
         <record id="account_check_operation_rule" model="ir.rule">
             <field name="name">Check Operation Multi-Company</field>
             <field name="model_id" ref="model_account_check_operation"/>
             <field eval="True" name="global"/>
-            <field name="domain_force">['|',('check_id.company_id','=',False),('check_id.company_id','child_of',[user.company_id.id])]</field>
+            <field name="domain_force">
+                ['|',('check_id.company_id','=',False),('check_id.company_id','child_of',[user.company_id.id])]
+            </field>
         </record>
     </data>
 </odoo>

@@ -5,16 +5,25 @@
         <field name="model">account.bank.statement</field>
         <field name="inherit_id" ref="account.view_bank_statement_form" />
         <field name="arch" type="xml">
-            <field name="all_lines_reconciled" position="after">
+            <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
                 <button
                     name="%(account_statement_line_create_action)d"
-                    string="Import Journal Items"
                     type="action"
-                    class="oe_highlight"
-                    attrs="{'invisible':[('state', '!=', 'open')]}"
+                    class="oe_stat_button"
+                    icon="fa-level-down"
                     groups="account.group_account_user"
-                />
-            </field>
+                    context="{'default_journal_ids':[[6, False, [journal_id]]],
+                    'default_only_credit_account_id':True,'default_only_debit_account_id':True}"
+                    attrs="{'invisible':[('state', '!=', 'open')]}"
+                >
+                    <div class="o_field_widget o_stat_info">
+
+                        <span class="o_stat_text">Apuntes contables</span>
+                    </div>
+                </button>
+            </xpath>
+
+
         </field>
     </record>
 </odoo>
