@@ -2,23 +2,16 @@
 <templates id="point_of_sale.template" xml:space="preserve">
 
     
-        <t t-name="OrderReceipt" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">
-        <!--<t t-extend="OrderReceipt">
-            <t t-name="OrderReceipt" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">-->
-            <!--<xpath expr="//t[@t-if='receipt.company.phone']" position="before">
-                <div style="margin-top:3px;">
-                    <t t-if="receipt.company.phone">
-                        <t t-esc="receipt.company.phone"/>
-                    </t>
-                </div>
-            </xpath>-->
-            <xpath expr="//t[@t-if='receipt.company.contact_address']" position="replace">
+    <t t-name="OrderReceipt" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">
+
+        <xpath expr="//t[@t-if='receipt.company.contact_address']" position="replace">
             <t t-if="receipt.company.contact_address">
                 <h2>
                     <t t-esc="receipt.company.contact_address"/>
                 </h2>
             </t>
         </xpath>
+
         <xpath expr="//t[@t-if='receipt.company.vat']" position="replace">
             <div class="afip-info">
                 <t t-if="receipt.invoice_id">
@@ -34,76 +27,96 @@
             </div>
         </xpath>
 
-
         <xpath expr="//div[hasclass('pos-receipt')]/br" position="replace">
-
         </xpath>
-        <xpath expr="//div[hasclass('pos-receipt')]/br[1]" position="replace">
 
+        <xpath expr="//div[hasclass('pos-receipt')]/br[1]" position="replace">
         </xpath>
 
         <xpath expr="//t[@t-if='receipt.cashier']" position="replace">
-
-                <t t-if="receipt.invoice_id">
-                    <div class="afip-invoice-info">
-                        <hr/>
-                        <strong>
-                            N° DE FACTURA:
-                            <t t-esc="receipt.invoice_id"/>
-                            <br/>
-                            FECHA:
-                            <t t-esc="receipt.invoice_date_due"/></strong>
+            <t t-if="receipt.invoice_id">
+                <div class="afip-invoice-info">
+                    <hr/>
+                    <strong>
+                        N° DE FACTURA:
+                        <t t-esc="receipt.invoice_id"/>
                         <br/>
-                        <hr/>
-                    </div>
-                </t>
-                <t t-if='receipt.client'>
-                    <div>Cliente: <t t-esc='receipt.client.name'/></div>
-                    <t t-if="receipt.client.email">
-                        <div>Correo: <t t-esc='receipt.client.email'/></div>
-
-                    </t>
-                    <t t-if="receipt.client.street">
-                       <div>Direccion: <t t-esc='receipt.client.street'/></div>
-                    </t>
-                    <t t-if="receipt.client.vat">
-                      <div>Identificacion: <t t-esc='receipt.client.vat'/></div>
-                    </t>
-
-
+                        FECHA:
+                        <t t-esc="receipt.invoice_date_due"/></strong>
+                    <br/>
+                    <hr/>
+                </div>
+            </t>
+            <t t-if='receipt.client'>
+                <div>Cliente: <t t-esc='receipt.client.name'/></div>
+                <t t-if="receipt.client.email">
+                    <div>Correo: <t t-esc='receipt.client.email'/></div>
 
                 </t>
-
-                <t t-if='receipt.cashier'>
-                    <div class='cashier'>
-                        <hr/>
-                        <div>Servido por <t t-esc='receipt.cashier'/></div>
-                    </div>
+                <t t-if="receipt.client.street">
+                   <div>Direccion: <t t-esc='receipt.client.street'/></div>
                 </t>
-                <hr/>
-                <strong>
-                    <div>DESCRIPCIÓN</div>
-                    <div>CANT. UNIDAD x PRECIO UNIT.
-                       &#160;&#160;&#160;&#160;&#160;&#160;&#160;
-                            &#160;&#160;&#160;&#160;&#160;&#160;&#160;
-                            &#160;&#160;&#160;&#160;&#160;&#160;&#160;
-                        IMPORTE</div>
-                    </strong>
-                <hr/>
+                <t t-if="receipt.client.vat">
+                  <div>Identificacion: <t t-esc='receipt.client.vat'/></div>
+                </t>
+
+
+
+            </t>
+
+            <t t-if='receipt.cashier'>
+                <div class='cashier'>
+                    <hr/>
+                    <div>Servido por <t t-esc='receipt.cashier'/></div>
+                </div>
+            </t>
+            <hr/>
+            <strong>
+                <div>DESCRIPCIÓN</div>
+                <div>CANT. UNIDAD x PRECIO UNIT.
+                   &#160;&#160;&#160;&#160;&#160;&#160;&#160;
+                        &#160;&#160;&#160;&#160;&#160;&#160;&#160;
+                        &#160;&#160;&#160;&#160;&#160;&#160;&#160;
+                    IMPORTE</div>
+            </strong>
+            <hr/>
         </xpath>
+
         <xpath expr="//t[@t-esc='tax.name']" position="after">
-            <span> en <t t-esc="env.pos.format_currency(tax.base)" /></span>
+            <span> en <t t-esc="env.pos.format_currency(tax.base)"/></span>
         </xpath>
 
-        <xpath expr="//div[hasclass('pos-receipt-amount')]" position="before">
+        <xpath expr="//t[@t-if='!isTaxIncluded']" position="before">
+            <div class="pos-receipt-right-align">--------</div>
+            <br/>
+            <div>Subtotal</div>
             <t t-foreach="receipt.tax_details" t-as="tax" t-key="tax.name">
-                    <div class="pos-receipt-amount">
-                        Subtotal
-                        <t t-esc="tax.name" />
-                        <span t-esc='env.pos.format_currency_no_symbol(tax.base)'
-                              class="pos-receipt-right-align"/>
-                    </div>
-                </t>
+                <div class="pos-receipt-amount">
+                    Subtotal
+                    <t t-esc="tax.name"/>
+                    <span t-esc='env.pos.format_currency_no_symbol(tax.base)'
+                          class="pos-receipt-right-align"/>
+                </div>
+            </t>
+
+            <t t-foreach="receipt.tax_details" t-as="tax" t-key="tax.name">
+                <div class="pos-receipt-amount">
+                    <t t-esc="tax.name"/>
+                    <span t-esc="env.pos.format_currency_no_symbol(tax.amount)" class="pos-receipt-right-align"/>
+                </div>
+            </t>
+            <div class="pos-receipt-amount">
+                Total Taxes
+                <span t-esc="env.pos.format_currency(receipt.total_tax)" class="pos-receipt-right-align"/>
+            </div>
+
+
+        </xpath>
+
+        <xpath expr="//t[@t-if='isTaxIncluded']" position="replace">
+        </xpath>
+
+        <xpath expr="//t[@t-if='!isTaxIncluded']" position="replace">
         </xpath>
 
         <xpath expr="//div[hasclass('before-footer')]" position="after">
@@ -119,8 +132,6 @@
                 </div>
             </div>
         </xpath>
-
-
 
     </t>
 </templates>
