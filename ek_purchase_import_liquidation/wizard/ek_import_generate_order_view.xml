@@ -14,7 +14,10 @@
                                 <field name="partner_id" readonly="1"/>
                                 <field name="line_id" readonly="1"/>
                                 <field name="product_qty" sum="Total de Productos"/>
+                                <field name="weight" sum="Peso Total" optional="hide"/>
+                                <field name="total_weight" sum="Peso Total" optional="hide"/>
                                 <field name="product_qty_import" sum="Total a Importar"/>
+                                <field name="total_ctdad_pending_weight" sum="Peso Total" optional="hide"/>
                             </tree>
                         </field>
                     </group>
@@ -33,7 +36,7 @@
                     </group>
                     <footer>
                         <button name="action_confirm" string="Confirmar operación" type="object" class="oe_highlight"
-                        confirm="Esta seguro que la información está correcta."/>
+                        />
                         o
                         <button string="Cancel" class="oe_link" special="cancel"/>
                     </footer>
@@ -48,18 +51,9 @@
             <field name="view_mode">form</field>
             <field name="view_id" ref="view_ek_import_generate_order_wizard"/>
             <field name="target">new</field>
+            <field name="binding_model_id" ref="purchase.model_purchase_order_line" />
+            <field name="binding_view_types">list</field>
         </record>
-
-
-        <!--<record model="ir.values" id="value_ek_import_generate_order">
-            <field name="model_id" ref="model_ek_import_liquidation"/>
-            <field name="name">Asignar a Importación</field>
-            <field name="key2">client_action_multi</field>
-            <field name="value" eval="'ir.actions.act_window,' + str(ref('ek_purchase_import_liquidation.action_ek_import_generate_order_wizard'))"/>
-            <field name="key">action</field>
-            <field name="model">purchase.order.line</field>
-        </record>-->
-
 
     </data>
 </openerp>

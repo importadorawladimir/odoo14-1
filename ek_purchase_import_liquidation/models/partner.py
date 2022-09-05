@@ -33,11 +33,11 @@ class res_partner(models.Model):
     def _purchase_import_count(self):
 
         PurchaseOrder = self.env['ek.import.liquidation']
-        Invoice = self.env['ek.import.liquidation.invoice']
+        Invoice = self.env['account.move']
         res = {}
 
         for partner_id in self:
             partner_id.purchase_liq_import_count = PurchaseOrder.search_count([
                     ('partner_id', 'child_of', partner_id.id), ('state', '!=', 'cancel')])
             partner_id.supplier_liq_invoice_count = Invoice.search_count([
-                    ('partner_id', 'child_of', partner_id.id), ('state', '!=', 'cancel')])
+                    ('partner_id', 'child_of', partner_id.id), ('state', '!=', 'cancel'),('invoice_liquidation_id','!=',False)])

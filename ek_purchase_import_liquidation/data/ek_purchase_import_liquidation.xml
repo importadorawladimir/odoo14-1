@@ -55,7 +55,6 @@
             <field eval="1" name="number_next"/>
             <field eval="1" name="number_increment"/>
             <field name="company_id" eval="False"/>
-        </record>
-
+        </record>sx
     </data>
 </openerp>

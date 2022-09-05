@@ -42,31 +42,56 @@ class purchase_order_line(models.Model):
     ctdad_pending = fields.Float(string="Ctdad. Pendiente",  required=False, readonly=True, compute="_compute_pending_import", help="Cantidad pendiente de importar", store=True)
     liquidation_line_ids = fields.One2many(comodel_name="ek.import.liquidation.line", inverse_name="purchase_line_id", string=u"Importación", required=False, help="")
     is_import = fields.Boolean(string=u"Orden de Importación",compute="compute_is_import_field", store=True)
+    weight = fields.Float(
+        string='Peso Unitario',
+        required=False, related="product_id.weight", store=True)
+    total_weight = fields.Float(
+        string='Peso Total',
+        required=False, store=True, compute="_compute_total_weight")
+    total_ctdad_pending_weight = fields.Float(
+        string='Peso por Importar',
+        required=False, store=True, compute="_compute_pending_import")
+
+    tariff_id = fields.Many2one('ek.tariff.heading', 'Partida Arancelaria', ondelete='restrict',
+                                domain=[('type', '<>', 'view')], related="product_id.tariff_heading_id")
+
+    ref_import = fields.Char(
+        related='product_id.ref_import',
+        required=False)
+
+    @api.depends('product_id','product_qty')
+    def _compute_total_weight(self):
+        for rec in self:
+            rec.update({
+                'total_weight': rec.product_id.weight * rec.product_qty
+            })
+
 
     @api.model
     def _calc_line_base_price(self, line):
         res = super(purchase_order_line, self)._calc_line_base_price(line)
         return res * (1 - line.discount / 100.0)
 
-    discount = fields.Float(
-        string='Descuento (%)', digits_compute='Discount')
-
-    _sql_constraints = [
-        ('discount_limit', 'CHECK (discount <= 100.0)',
-         'El descuento debe ser inferior al 100%.'),
-    ]
 
     @api.depends("product_qty","liquidation_line_ids","liquidation_line_ids.state","liquidation_line_ids.product_qty")
     def _compute_pending_import(self):
         for rec in self:
             if not rec.is_import or len(rec.liquidation_line_ids) == 0:
-                rec.ctdad_imported = 0
-                rec.ctdad_pending = rec.product_qty
+                rec.update({
+                    'ctdad_imported': 0,
+                    'ctdad_pending': rec.product_qty,
+                    'total_ctdad_pending_weight': rec.product_id.weight * rec.product_qty
+                })
             else:
                 imported = sum([p.product_qty for p in rec.liquidation_line_ids.filtered(lambda a: a.state not in ['cancel','draft'])])
-                rec.ctdad_imported = imported
                 diff = rec.product_qty - imported
-                rec.ctdad_pending = diff > 0 and diff or 0
+                pending = diff > 0 and diff or 0
+                rec.update({
+                    'ctdad_imported': imported,
+                    'ctdad_pending': pending,
+                    'total_ctdad_pending_weight': rec.product_id.weight * pending
+                })
+
 
 class purchase_order(models.Model):
     _inherit = 'purchase.order'

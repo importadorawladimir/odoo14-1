@@ -8,59 +8,28 @@
             <field name="inherit_id" ref="purchase.purchase_order_form"/>
             <field name="arch" type="xml">
 
-                <xpath expr="//field[@name='origin']" position="after">
+                <xpath expr="//field[@name='picking_type_id']" position="before">
                     <!-- Add your fields or attributes here -->
-                    <field name="is_import"/>
+                    <field name="is_import" groups="ek_purchase_import_liquidation.group_user_import_orders"/>
 
                 </xpath>
 
-                 <!--<xpath expr="//button[@name='action_create_invoice'][last()]" position="attributes">
-                     <attribute name="attrs">{'invisible': ['|','|', ('is_import', '=', True),('state', 'not in', ('purchase', 'done')), ('invoice_status', 'in', ('no', 'invoiced'))]}</attribute>
+                 <xpath expr="//button[@name='action_create_invoice'][last()]" position="attributes">
+                     <attribute name="attrs">{'invisible': ['|', '|', '|',  ('is_import', '=', True),('state', 'not in', ('purchase', 'done')), ('invoice_status', 'not in', ('no', 'invoiced')), ('order_line', '=', [])]}</attribute>
+
                  </xpath>
 
+
                 <xpath expr="//field[@name='product_qty']" position="after">
-                    <field name="ctdad_imported"/>
-                    <field name="ctdad_pending"/>
+                    <field name="ctdad_imported" optional="hide" groups="ek_purchase_import_liquidation.group_user_import_orders"/>
+                    <field name="ctdad_pending"  optional="hide" groups="ek_purchase_import_liquidation.group_user_import_orders"/>
+                    <field name="weight"  optional="hide"/>
+                    <field name="total_weight"  optional="hide"/>
                     <field name="is_import" invisible="1"/>
                 </xpath>
-                 <xpath expr="//field[@name='product_uom']" position="attributes">
-                    <attribute name="string">U/M</attribute>
-                </xpath>-->
 
 
             </field>
         </record>
-
-    <!--<record model="ir.ui.view" id="purchase_discount_order_line_form">
-        <field name="name">purchase_discount.order.line.form</field>
-        <field name="model">purchase.order.line</field>
-        <field name="inherit_id" ref="purchase.purchase_order_line_form"/>
-        <field name="arch" type="xml">
-            <field name="price_unit" position="after">
-                <field name="discount"/>
-            </field>
-        </field>
-    </record>
-    <record model="ir.ui.view" id="purchase_discount_order_line_tree">
-        <field name="name">purchase_discount.order.line.tree</field>
-        <field name="model">purchase.order.line</field>
-        <field name="inherit_id" ref="purchase.purchase_order_line_tree"/>
-        <field name="arch" type="xml">
-            <field name="price_unit" position="after">
-                <field name="discount"/>
-            </field>
-        </field>
-    </record>
-
-     <record model="ir.ui.view" id="purchase_discount_order_form">
-         <field name="name">purchase.discount.order.form</field>
-         <field name="model">purchase.order</field>
-         <field name="inherit_id" ref="purchase.purchase_order_form"/>
-         <field name="arch" type="xml">
-              <xpath expr="//field[@name='order_line']/tree/field[@name='price_unit']" position="after">
-                  <field name="discount"/>
-                 </xpath>
-         </field>
-     </record>-->
     </data>
 </openerp>

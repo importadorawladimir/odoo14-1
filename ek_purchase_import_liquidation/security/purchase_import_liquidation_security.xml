@@ -17,7 +17,7 @@
 
         <record id="group_user_import_orders" model="res.groups">
             <field name="name">Pedidos de Importación</field>
-            <field name="implied_ids" eval="[(4, ref('base.user_root'))]"/>
+            <field name="implied_ids" eval="[(4, ref('purchase.group_purchase_user'))]"/>
             <field name="category_id" ref="module_purchase_import_liquidation"/>
         </record>
 

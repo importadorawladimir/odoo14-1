@@ -24,15 +24,18 @@
 
 {
     'name' : 'Ekuasoft Purchase Import Liquidation',
-    'version' : '0.1.0',
+    'version' : '14.0.1.0',
     'author' : 'EkuaSoft Software Development Group Solution',
     'category': 'Import',
     'complexity': 'normal',
     'website': 'http://www.ekuasoft.com',
+    'license': 'OPL-1',
     'data': [
         'data/ek_purchase_import_liquidation.xml',
-        'view/menu_config.xml',
+        'data/data_import_liquidation.xml',
+        'data/ek.country.port.csv',
         'security/purchase_import_liquidation_security.xml',
+        'view/menu_config.xml',
         'view/tariff_heading_view.xml',
         'view/product_product.xml',
         'view/incoterms_view.xml',
@@ -44,7 +47,8 @@
         'view/account_move_view.xml',
         'wizard/ek_import_generate_order_view.xml',
         #'report/report_purchaseorder.xml',
-        'security/ir.model.access.csv'
+        'report/consolidate_tariff_report.xml',
+        'security/ir.model.access.csv',
     ],
     'depends' : [
         'base',
@@ -52,7 +56,7 @@
         'stock_account',
         'purchase',
         'purchase_stock',
-        'ek_l10n_ec'
+        'purchase_discount',
     ],
     'js': [
     ],

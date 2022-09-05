@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
+
 
 class ek_import_generate_order_line(models.TransientModel):
     _name = 'ek.import.generate.order.line'
@@ -10,42 +12,65 @@ class ek_import_generate_order_line(models.TransientModel):
     purchase_order_id = fields.Many2one(comodel_name='purchase.order', string='Orden de Compra',related="line_id.order_id")
     partner_id = fields.Many2one(comodel_name="res.partner", string="Proveedor", required=False,related="line_id.partner_id")#
     order_id = fields.Many2one(comodel_name="ek.import.generate.order", string="Orden", required=False, help="")
-    
+
+    weight = fields.Float(
+        string='Peso Unitario',
+        required=False, related="line_id.product_id.weight")
+    total_weight = fields.Float(
+        string='Peso Total',
+        required=False, compute="_compute_pending_import")
+    total_ctdad_pending_weight = fields.Float(
+        string='Peso por Importar',
+        required=False, compute="_compute_pending_import")
+
+    @api.depends("line_id", "product_qty_import")
+    def _compute_pending_import(self):
+        for rec in self:
+            rec.update({
+                'total_weight': rec.line_id.product_id.weight * rec.product_qty,
+                'total_ctdad_pending_weight': rec.line_id.product_id.weight * rec.product_qty_import
+            })
+
+
 class ek_import_generate_order(models.TransientModel):
     """Asociar regalias a viaje"""
     _name = 'ek.import.generate.order'
     _description = _('Asociar Lineas de ordenes de compra a Importaciones')
-
+    _save_info = []
 
 
     @api.model
     def default_get(self, fields):
         res = super(ek_import_generate_order, self).default_get(fields)
         active_ids = self.env.context.get('active_ids')
-        collector = False
+        collector = self.env['ek.import.generate.order.line']
         if active_ids:
             obtects = self.env['purchase.order.line'].browse(active_ids).filtered(lambda x: x.state != 'cancel' and x.ctdad_pending > 0)
 
             if len(obtects):
                 lis = []
                 for rec in obtects:
-                    lis.append((0,0,{
+                    lis.append({
                         'line_id': rec.id,
                         'product_qty_import': rec.ctdad_pending,
                         'product_qty': rec.ctdad_pending,
                         'purchase_order_id': rec.order_id.id,
                         'partner_id': rec.partner_id.id
-                    }))
+                    })
 
-                res['collection_ids'] = lis
 
+
+                xyz = collector.create(lis)
+
+
+                res.update({'collection_ids': xyz})
 
         return res
 
-    collection_ids = new_field_ids = fields.One2many(comodel_name="ek.import.generate.order.line", inverse_name="order_id", string="Lineas")
+    collection_ids = fields.One2many(comodel_name="ek.import.generate.order.line", inverse_name="order_id", string="Lineas")
     liq_id = fields.Many2one(comodel_name="ek.import.liquidation", string=u"Liquidación", required=True, help="")
     asigned_to_invoice = fields.Boolean(string="Asignar a Factura",  )
-    invoice_id = fields.Many2one(comodel_name="ek.import.liquidation.invoice", string="Factura", required=False, )
+    invoice_id = fields.Many2one(comodel_name="account.move", string="Factura", required=False, domain="[('move_type','=','in_invoice')]")
 
 
 
@@ -57,6 +82,7 @@ class ek_import_generate_order(models.TransientModel):
 
 
     def action_confirm(self):
+
         line_obj = self.env["ek.import.liquidation.line"]
         for rec in self:
 
@@ -68,7 +94,7 @@ class ek_import_generate_order(models.TransientModel):
                     'purchase_line_id': line.line_id.id,
                     'order_id': rec.liq_id.id,
                     'product_qty': line.product_qty_import,
-                    'name': line.line_id.name,
+                    'name': line.line_id.name or line.line_id.product_id.name,
                     'product_id': line.line_id.product_id.id,
                     'date_planned': line.line_id.date_planned,
                     'product_uom': line.line_id.product_uom and line.line_id.product_uom.id or False,
