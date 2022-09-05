@@ -94,6 +94,10 @@ class product_product(models.Model):
     _inherit = "product.product"
 
     tariff_heading_id = fields.Many2one("ek.tariff.heading", string="Partida arancelaria", required=False, help="")
+    
+    ref_import = fields.Char(
+        string='Alias de Importación',
+        required=False, help="Este campo se usa para los reportes donde los nombres de los productos deben ser estandares")
 
     amount_fob = fields.Float(string=u'Valor FOB', digits='Total FOB',
                               digits_compute='Total FOB', help=u"Valor FOB refencial a la ultima liquidación de importación", readonly=True)
@@ -104,7 +108,19 @@ class product_product(models.Model):
                               digits_compute='Product Price',
                               help=u"Valor del ultimo costo de compra o importación", readonly=True)
 
+    '''def name_get(self):
+        result = []
+        for rec in self:
+            name = rec.name
 
+            if self.user_has_groups('purchase.group_purchase_manager') or self.user_has_groups('purchase.group_purchase_user'):
+                name = '[%s] %s' % (rec.default_code, name)
+            else:
+                name = '[00000%s] %s' % (rec.id, name)
+
+            result.append((rec.id, name))
+        return result
+    '''
     '''def name_get(self, cr, user, ids, context=None):
         if context is None:
             context = {}

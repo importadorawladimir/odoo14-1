@@ -2,12 +2,14 @@
 <openerp>
     <data>
 
+
         <record id="stock_incoterms_terms_form" model="ir.ui.view">
             <field name="name">stock.incoterms.terms.form</field>
             <field name="model">account.incoterms</field>
             <field name="arch" type="xml">
                 <form string="Incoterms">
-                    <label for="code" class="oe_edit_only" string="Código"/>
+                    <sheet>
+                        <label for="code" class="oe_edit_only" string="Código"/>
                     <h1>
                         <field name="code" class="oe_inline" placeholder="Código" style="width: 229px !important"/> -
                         <field name="name" class="oe_inline" placeholder="Nombre"/>
@@ -23,6 +25,7 @@
                             </tree>
                         </field>
                     </group>
+                    </sheet>
 
                 </form>
             </field>
@@ -81,7 +84,7 @@
             <field name="act_window_id" ref="action_stock_incoterms_terms"/>
         </record>
 
-        <menuitem action="action_stock_incoterms_terms" id="menu_stock_incoterms_terms" parent="menu_liquidation_in_config" groups="purchase.group_purchase_manager"/>
+        <menuitem action="action_stock_incoterms_terms" id="menu_stock_incoterms_terms" parent="menu_liquidation_in_config" groups="ek_purchase_import_liquidation.group_admin_purchase_import_liquidation"/>
 
 
         <record id="ek_incoterms_terms_form_view" model="ir.ui.view">
@@ -151,7 +154,7 @@
         </record>
 
 
-        <menuitem action="action_ek_incoterms_terms" id="menu_stock_incoterms_terms_and_totals" parent="menu_liquidation_in_config" groups="purchase.group_purchase_manager"/>
+        <menuitem action="action_ek_incoterms_terms" id="menu_stock_incoterms_terms_and_totals" parent="menu_liquidation_in_config" groups="ek_purchase_import_liquidation.group_admin_purchase_import_liquidation"/>
     </data>
 </openerp>
 

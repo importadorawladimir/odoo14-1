@@ -6,7 +6,8 @@
             <field name="model">ek.tariff.heading</field>
             <field name="arch" type="xml">
                 <form string="Account">
-                    <label for="code" class="oe_edit_only" string="Nombre y código de la partida"/>
+                    <sheet>
+                        <label for="code" class="oe_edit_only" string="Nombre y código de la partida"/>
                     <h1>
                         <field name="code" class="oe_inline" placeholder="Código Partida" style="width: 229px !important"/> -
                         <field name="name" class="oe_inline" placeholder="Descripción Arancelaria"/>
@@ -46,6 +47,7 @@
                             </group>
                         </page>
                      </notebook>
+                    </sheet>
 
                 </form>
             </field>
@@ -74,7 +76,7 @@
                     <filter name="my_view" string="Vistas" domain="[('type','=','view')]"/>
                     <filter name="my_regulars" string="Regulares" domain="[('type','=','regular')]"/>
                     <group expand="0" string="Agrupar por...">
-                        <filter name="my_level" string="Nivel Superiro" context="{'group_by':'parent_id'}"/>
+                        <filter name="my_level" string="Nivel Superior" context="{'group_by':'parent_id'}"/>
                         <filter name="my_type" string="Tipo" context="{'group_by':'type'}"/>
                     </group>
                 </search>
@@ -98,7 +100,7 @@
         </record>
         
         <!--<menuitem id="account_account_menu" name="Partidas Arancelarias" parent="menu_import_root" sequence="15"/>-->
-        <menuitem action="action_tariff_heading_form" id="menu_tariff_heading_form" parent="menu_liquidation_in_config" groups="purchase.group_purchase_manager"/>
+        <menuitem action="action_tariff_heading_form" id="menu_tariff_heading_form" parent="menu_liquidation_in_config" groups="ek_purchase_import_liquidation.group_admin_purchase_import_liquidation"/>
         
         <record id="view_tariff_heading_tree" model="ir.ui.view">
             <field name="name">ek.tariff.heading.tree</field>
@@ -122,7 +124,7 @@
             <field name="domain">[('parent_id','=',False)]</field>
         </record>
 
-        <menuitem action="action_tariff_heading_tree" id="menu_tree_tariff" parent="menu_liquidation_in_config" groups="purchase.group_purchase_manager"/>
+        <menuitem action="action_tariff_heading_tree" id="menu_tree_tariff" parent="menu_liquidation_in_config" groups="ek_purchase_import_liquidation.group_admin_purchase_import_liquidation"/>
         
         <!-- Tariff Category-->
         <record id="ek_tariff_rule_category_form" model="ir.ui.view">
@@ -130,16 +132,17 @@
             <field name="model">ek.tariff.rule.category</field>
             <field name="arch" type="xml">
                 <form string="Categorias">
-                    <group col="4">
-                        <field name="name"/>
-                        <field name="code"/>
-                        <field name="parent_id"/>
+                   <sheet>
+                       <group col="4">
+                           <field name="code"/>
+                            <field name="name"/>
+                            <field name="parent_id"/>
 
-                    </group>
-                    <group col="4" colspan="4">
-                        <separator string="Notas"/>
-                        <field name="note"/>
-                    </group>
+                        </group>
+                        <group col="4" colspan="4" string="Notas">
+                            <field name="note"/>
+                        </group>
+                   </sheet>
                 </form>
             </field>
         </record>
@@ -200,7 +203,7 @@
             <field name="name">ek.tariff.rule.list</field>
             <field name="model">ek.tariff.rule</field>
             <field name="arch" type="xml">
-                <tree string="Reglas de Trifas Arancelarias">
+                <tree string="Reglas de Trarifas Arancelarias">
                     <field name="name"/>
                     <field name="code"/>
                     <field name="category_id"/>
@@ -214,7 +217,7 @@
             <field name="model">ek.tariff.rule</field>
             <field eval="20" name="priority"/>
             <field name="arch" type="xml">
-                <tree string="Reglas de Trifas Arancelarias">
+                <tree string="Reglas de Tarifas Arancelarias">
                     <field name="name"/>
                     <field name="code"/>
                     <field name="category_id" invisible="True"/>
@@ -225,42 +228,44 @@
             <field name="name">ek.tariff.rule.form</field>
             <field name="model">ek.tariff.rule</field>
             <field name="arch" type="xml">
-                <form string="Reglas de Trifas Arancelarias">
-                    <label for="name" class="oe_edit_only"/>
-                    <h1><field name="name"/></h1>
-                    <label for="category_id" class="oe_edit_only"/>
-                    <h2><field name="category_id"/></h2>
+                <form string="Reglas de Tarifas Arancelarias">
+                    <sheet>
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name"/></h1>
+                        <label for="category_id" class="oe_edit_only"/>
+                        <h2><field name="category_id"/></h2>
 
-                    <group col="4">
-                       <field name="code"/>
-                       <field name="sequence" />
-                       <field name="active"/>
-                       <field name="param"/>
-                       <field name="terms_id"/>
-                    </group>
-                    <notebook colspan="6">
-                        <page string="General">
-                            <group col="4">
-                                <separator colspan="4" string="Condiciones"/>
-                                <field name="condition_select"/><newline/>
-                                <field name="condition_python" attrs="{'invisible':[('condition_select','&lt;&gt;','python')], 'required': [('condition_select','=','python')]}" colspan="4"/> <newline/>
-                                <field name="condition_range" attrs="{'invisible':[('condition_select','&lt;&gt;','range')], 'required':[('condition_select','=','range')]}"/><newline/>
-                                <field name="condition_range_min" colspan="2" attrs="{'invisible':[('condition_select','&lt;&gt;','range')], 'required':[('condition_select','=','range')]}"/><newline/>
-                                <field name="condition_range_max" colspan="2" attrs="{'invisible':[('condition_select','&lt;&gt;','range')], 'required':[('condition_select','=','range')]}"/><newline/>
-                                <separator colspan="4" string="Cálculo"/>
-                                <field name="amount_select"/><newline/>
-                                <field name="amount_percentage_base" attrs="{'invisible':[('amount_select','&lt;&gt;','percentage')], 'required': [('amount_select','=','percentage')]}"/><newline/>
-                                <field name="quantity" attrs="{'invisible':[('amount_select','=','code')], 'required':[('amount_select','!=','code')]}"/><newline/>
-                                <field name="amount_fix"  attrs="{'invisible':[('amount_select','&lt;&gt;','fix')], 'required':[('amount_select','=','fix')]}"/><newline/>
-                                <field colspan="4" name="amount_python_compute" attrs="{'invisible':[('amount_select','&lt;&gt;','code')], 'required':[('amount_select','=','code')]}"/>
-                                <field name="amount_percentage" attrs="{'invisible':[('amount_select','&lt;&gt;','percentage')], 'required':[('amount_select','=','percentage')]}"/>
+                        <group col="4">
+                           <field name="code"/>
+                           <field name="sequence" />
+                           <field name="active"/>
+                           <field name="param"/>
+                           <field name="terms_id"/>
+                        </group>
+                        <notebook colspan="6">
+                            <page string="General">
+                                <group col="4">
+                                    <separator colspan="4" string="Condiciones"/>
+                                    <field name="condition_select"/><newline/>
+                                    <field name="condition_python" attrs="{'invisible':[('condition_select','&lt;&gt;','python')], 'required': [('condition_select','=','python')]}" colspan="4"/> <newline/>
+                                    <field name="condition_range" attrs="{'invisible':[('condition_select','&lt;&gt;','range')], 'required':[('condition_select','=','range')]}"/><newline/>
+                                    <field name="condition_range_min" colspan="2" attrs="{'invisible':[('condition_select','&lt;&gt;','range')], 'required':[('condition_select','=','range')]}"/><newline/>
+                                    <field name="condition_range_max" colspan="2" attrs="{'invisible':[('condition_select','&lt;&gt;','range')], 'required':[('condition_select','=','range')]}"/><newline/>
+                                    <separator colspan="4" string="Cálculo"/>
+                                    <field name="amount_select"/><newline/>
+                                    <field name="amount_percentage_base" attrs="{'invisible':[('amount_select','&lt;&gt;','percentage')], 'required': [('amount_select','=','percentage')]}"/><newline/>
+                                    <field name="quantity" attrs="{'invisible':[('amount_select','=','code')], 'required':[('amount_select','!=','code')]}"/><newline/>
+                                    <field name="amount_fix"  attrs="{'invisible':[('amount_select','&lt;&gt;','fix')], 'required':[('amount_select','=','fix')]}"/><newline/>
+                                    <field colspan="4" name="amount_python_compute" attrs="{'invisible':[('amount_select','&lt;&gt;','code')], 'required':[('amount_select','=','code')]}"/>
+                                    <field name="amount_percentage" attrs="{'invisible':[('amount_select','&lt;&gt;','percentage')], 'required':[('amount_select','=','percentage')]}"/>
 
-                            </group>
-                        </page>
-                        <page string="Descripción">
-                            <field name="note"/>
-                        </page>
-                    </notebook>
+                                </group>
+                            </page>
+                            <page string="Descripción">
+                                <field name="note"/>
+                            </page>
+                        </notebook>
+                    </sheet>
                 </form>
             </field>
         </record>
@@ -269,8 +274,8 @@
             <field name="name">ek.tariff.rule.select</field>
             <field name="model">ek.tariff.rule</field>
             <field name="arch" type="xml">
-                <search string="Búsqueda Reglas de Trifas Arancelarias">
-                    <field name="name" string="Reglas de Trifas Arancelarias" filter_domain="['|',('name','ilike',self),('code','ilike',self)]"/>
+                <search string="Búsqueda Reglas de Tarifas Arancelarias">
+                    <field name="name" string="Reglas de Tarifas Arancelarias" filter_domain="['|',('name','ilike',self),('code','ilike',self)]"/>
                     <field name="category_id"/>
                     <field name="condition_range_min"/>
                     <group col="8" colspan="4" expand="0" string="Agrupar por">
@@ -282,14 +287,14 @@
 
 
         <record id="action_ek_tariff_rule_form" model="ir.actions.act_window">
-            <field name="name">Reglas de Trifas Arancelarias</field>
+            <field name="name">Reglas de Tarifas Arancelarias</field>
             <field name="res_model">ek.tariff.rule</field>
             <field name="view_mode">form,tree</field>
             <field name="view_id" ref="ek_tariff_rule_list"/>
             <field name="search_view_id" ref="view_tariff_rule_filter"/>
         </record>
 
-        <menuitem id="menu_action_ek_tariff_rule_form" action="action_ek_tariff_rule_form" parent="menu_liquidation_in_config" sequence="12" groups="purchase.group_purchase_manager"/>
+        <menuitem id="menu_action_ek_tariff_rule_form" action="action_ek_tariff_rule_form" parent="menu_liquidation_in_config" sequence="12" groups="ek_purchase_import_liquidation.group_admin_purchase_import_liquidation"/>
 
     </data>
 </openerp>

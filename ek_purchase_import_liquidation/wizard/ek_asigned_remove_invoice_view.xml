@@ -44,13 +44,17 @@
         </record>
 
         <record id="action_asigned_remove_invoice_wizard" model="ir.actions.act_window">
-            <field name="name">Asignar A Factura</field>
+            <field name="name">Eliminar de Factura</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">ek.asigned.remove.invoice</field>
             <field name="view_mode">form</field>
             <field name="view_id" ref="view_ek_asigned_remove_invoice_wizard"/>
             <field name="target">new</field>
+            <!-- TODO: check if we need this -->
+            <field name="binding_model_id" ref="ek_purchase_import_liquidation.model_ek_import_liquidation_line" />
+            <field name="binding_view_types">list</field>
         </record>
+
 
     </data>
 </openerp>
