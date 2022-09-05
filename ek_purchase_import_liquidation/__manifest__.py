@@ -24,7 +24,7 @@
 
 {
     'name' : 'Ekuasoft Purchase Import Liquidation',
-    'version' : '15.0.1.0',
+    'version' : '14.0.1.0',
     'author' : 'EkuaSoft Software Development Group Solution',
     'category': 'Import',
     'complexity': 'normal',
