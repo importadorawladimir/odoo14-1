@@ -1246,7 +1246,7 @@ class ek_import_liquidation_breakdown_expenses(models.Model):
     code = fields.Char(u'Código', size=64, required=False, readonly=False, related="terms_id.code", store=True)
     type = fields.Selection(string="Tipo",
                             selection=[('freight', 'Flete'), ('insurance', 'Seguro'), ('expense', 'Gasto'),
-                                       ('other', 'Otros'), ('liquidation', 'Otros')], required=False, store=True, related="terms_id.type", default="other")
+                                       ('other', 'Otros'), ('liquidation', 'Otros - Liquidación'), ('simulation', 'Otros - Simulación')], required=False, store=True, related="terms_id.type", default="other")
     sequence = fields.Integer('Orden', required=False, help=u'Úselo para organizar la secuencia de cálculo',
                                related="terms_id.sequence", store=True)
     manual = fields.Boolean(string="Manual",  default=True)

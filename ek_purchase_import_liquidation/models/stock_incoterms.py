@@ -35,7 +35,7 @@ class ek_incoterms_terms(models.Model):
     sequence = fields.Integer('Orden', default=1, required=True, help=u'Úselo para organizar la secuencia de cálculo',
                               select=True)
     note = fields.Text(u'Descripción')
-    type = fields.Selection(string="Tipo", default='other', selection=[('freight', 'Flete'),('insurance', 'Seguro'),('expense', 'Gasto'), ('calculate', u'Calculo de Aduanero'), ('other', 'Otros'), ('liquidation', 'Otros'), ], required=True, )
+    type = fields.Selection(string="Tipo", default='other', selection=[('freight', 'Flete'),('insurance', 'Seguro'),('expense', 'Gasto'), ('calculate', u'Calculo de Aduanero'), ('other', 'Otros'), ('other', 'Otros'), ('liquidation', 'Otros - Liquidación'), ('simulation', 'Otros - Simulación'), ], required=True, )
     is_considered_total = fields.Boolean(default=True, string="Considerado en el total?",  help=u"Indica que este rubro sera considerado en el total de la importación")
     is_provider_assumed = fields.Boolean(string="Valor asumido por el proveedor?",  help=u"Si esta casilla está marcada este solo sera usado para el calculo de los tributos")
 
