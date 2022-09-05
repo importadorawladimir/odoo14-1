@@ -32,12 +32,12 @@ class product_template(models.Model):
     _inherit = 'product.template'
 
     amount_fob = fields.Float(string=u'Valor FOB', digits='Total FOB', compute="_compute_fob_cif",
-                              digits_compute='Total FOB', help=u"Valor FOB refencial a la ultima liquidación de importación", readonly=True)
+                              help=u"Valor FOB refencial a la ultima liquidación de importación", readonly=True)
     amount_cif = fields.Float(string=u'Valor CIF', digits='Total FOB', compute="_compute_fob_cif",
-                              digits_compute='Total FOB', help=u"Valor CIF refencial a la ultima liquidación de importación", readonly=True)
+                              help=u"Valor CIF refencial a la ultima liquidación de importación", readonly=True)
 
     last_cost = fields.Float(string=u'Ultimo Costo', digits='Product Price',
-                             digits_compute='Product Price',
+
                              help=u"Valor del ultimo costo de compra o importación", compute="_compute_fob_cif", readonly=True)
 
 
@@ -100,12 +100,12 @@ class product_product(models.Model):
         required=False, help="Este campo se usa para los reportes donde los nombres de los productos deben ser estandares")
 
     amount_fob = fields.Float(string=u'Valor FOB', digits='Total FOB',
-                              digits_compute='Total FOB', help=u"Valor FOB refencial a la ultima liquidación de importación", readonly=True)
+                              help=u"Valor FOB refencial a la ultima liquidación de importación", readonly=True)
     amount_cif = fields.Float(string=u'Valor CIF', digits='Total FOB',
-                              digits_compute='Total FOB', help=u"Valor CIF refencial a la ultima liquidación de importación", readonly=True)
+                              help=u"Valor CIF refencial a la ultima liquidación de importación", readonly=True)
 
     last_cost = fields.Float(string=u'Ultimo Costo', digits='Product Price',
-                              digits_compute='Product Price',
+
                               help=u"Valor del ultimo costo de compra o importación", readonly=True)
 
     '''def name_get(self):

@@ -154,18 +154,18 @@ class ek_import_liquidation(models.Model):
     origin = fields.Char('Documento Origen', copy=False,
                                         help=u"Referencia del documento que generó esta liquidación de importación.")
     date = fields.Date('Fecha', required=True , states=READONLY_STATES,
-                                            select=True,
+                                            
                                             copy=False,default=time.strftime('%Y-%m-%d'))
 
     shipment_date = fields.Date('Fecha de Embarque', required=False, states=READONLY_STATES,
-                       select=True,
+                       
                        copy=False, default=time.strftime('%Y-%m-%d'))
 
     arrival_date = fields.Date('Fecha de Arribo', required=False, states=READONLY_STATES,
-                       select=True,
+                       
                        copy=False, default=time.strftime('%Y-%m-%d'))
 
-    date_approve = fields.Date(u'Fecha de Aprobación', readonly=1, select=True, copy=False,
+    date_approve = fields.Date(u'Fecha de Aprobación', readonly=1,  copy=False,
                                         help=u"Fecha en que se ha aprobado la importación", states=READONLY_STATES)
     cost_type = fields.Selection(
         string='Tipo de Costeo',
@@ -185,16 +185,16 @@ class ek_import_liquidation(models.Model):
     partner_id = fields.Many2one('res.partner', string='Proveedor', required=True, change_default=True, track_visibility='always', states=READONLY_STATES)
     location_id = fields.Many2one('stock.location', string='Destino', required=True,
                                             domain=[('usage', '<>', 'view')], states=READONLY_STATES)
-    amount_total = fields.Float(string=u'Total de Importación',digits='Account' ,digits_compute='Account', states=READONLY_STATES)
-    amount_fob = fields.Float(string=u'Total FOB',digits='Total FOB', digits_compute='Total FOB', readonly=True, compute="_compute_amount_fob", store=True, states=READONLY_STATES)
-    total_weight = fields.Float(string=u'Peso Total (kg)',digits="Product Unit of Measure", digits_compute="Product Unit of Measure", readonly=True, compute="_compute_total_weight", store=True, states=READONLY_STATES)
+    amount_total = fields.Float(string=u'Total de Importación',digits='Account', states=READONLY_STATES)
+    amount_fob = fields.Float(string=u'Total FOB',digits='Total FOB', readonly=True, compute="_compute_amount_fob", store=True, states=READONLY_STATES)
+    total_weight = fields.Float(string=u'Peso Total (kg)',digits="Product Unit of Measure", readonly=True, compute="_compute_total_weight", store=True, states=READONLY_STATES)
     percent_pvp_mayor = fields.Float(string=u'Procentaje P.V.P Mayor', default=1.2)
     percent_pvp_minor = fields.Float(string=u'Procentaje P.V.P Menor', default=1.5)
-    factor = fields.Float(string=u'Factor',digits='Account', digits_compute='Account', compute="_compute_factor", store=True, help=u"Porcentaje de incremento de la importación despues de gastos e impuestos", states=READONLY_STATES)
+    factor = fields.Float(string=u'Factor',digits='Account', compute="_compute_factor", store=True, help=u"Porcentaje de incremento de la importación despues de gastos e impuestos", states=READONLY_STATES)
 
     state = fields.Selection(STATE_SELECTION, 'Estado', readonly=True,
 
-                                             select=True, copy=False, states=READONLY_STATES, default='draft')
+                                              copy=False, states=READONLY_STATES, default='draft')
     validator = fields.Many2one('res.users', string='Validado Por', readonly=True, copy=False)
     notes = fields.Text(u'Términos y Condiciones', states=READONLY_STATES)
 
@@ -681,7 +681,7 @@ class ek_import_liquidation_invoice(models.Model):
     journal_id = fields.Many2one("account.journal", string="Diario", required=False, )
     import_liquidation_id = fields.Many2one("ek.import.liquidation", string=u"Importación", required=False,)
     import_line_ids = fields.One2many("ek.import.liquidation.line", inverse_name="invoice_id", string="Items", required=False, )
-    amount_total = fields.Float(string="Total",  required=False,digits='Total FOB', digits_compute='Total FOB', sum="Total", readonly=True,
+    amount_total = fields.Float(string="Total",  required=False,digits='Total FOB', sum="Total", readonly=True,
                           compute="compute_calculate_amount", store=True)
     state = fields.Selection(string="Estado", selection=[('draft', 'Borrador'), ('confirm', 'Confirmado'), ('cancel', 'Cancelado') ], required=False, )
     company_id = fields.Many2one('res.company',  u'Compañía', required=False, default=lambda self: self.env.company)
@@ -872,11 +872,11 @@ class ek_import_liquidation_line(models.Model):
 
     origin = fields.Selection(string="Origen", selection=[('manual', 'Manual'), ('auto', u'Automático'), ], required=False, default='manual')
     name = fields.Text(u'Descripción', required=True)
-    product_qty = fields.Float('Cantidad', digits='Product Unit of Measure',digits_compute='Product Unit of Measure',
+    product_qty = fields.Float('Cantidad', digits='Product Unit of Measure',
                                         required=True, default=1)
-    product_weight = fields.Float('Peso/Kg',digits_compute='Product Unit of Measure',
+    product_weight = fields.Float('Peso/Kg',
                                required=False, default=0.00)
-    date_planned =  fields.Datetime('Fecha planificada', required=True, select=True, help=u"Fecha en la que se estima llegará la mercaderia", default = lambda self: time.strftime('%Y-%m-%d'))
+    date_planned =  fields.Datetime('Fecha planificada', required=True,  help=u"Fecha en la que se estima llegará la mercaderia", default = lambda self: time.strftime('%Y-%m-%d'))
 
     product_uom = fields.Many2one('uom.uom', string=u'U/M', required=True)
     product_id = fields.Many2one('product.product', string='Producto', domain=[('purchase_ok', '=', True)],
@@ -889,25 +889,24 @@ class ek_import_liquidation_line(models.Model):
         required=False)
 
     adv_manual = fields.Float(string=u"% Advalorem Manual", required=False, help=u"% Manual de advaloren segun convenio aplicado.", default=-1)
-    price_unit = fields.Float('FOB', required=True,digits='FOB',
-                                        digits_compute='FOB')
+    price_unit = fields.Float('FOB', required=True,digits='FOB')
 
-    discount = fields.Float(string='Descuento (%)', digits_compute='Discount')
-    price_subtotal = fields.Float(string='Total FOB',digits='Total FOB',digits_compute='Total FOB', compute="_amount_line", store=True)#
-    tariff_subtotal = fields.Float(string='Tributos', digits_compute='Importation Tributes', digits='Importation Tributes', compute="_tariff_subtotal", store=True)
-    freight_subtotal = fields.Float(string='Flete',digits='Importation Others', digits_compute='Importation Others', compute="_amount_general_subtotal", store=True)
-    insurance_subtotal = fields.Float(string='Seguro',digits='Importation Others', digits_compute='Importation Others', compute="_amount_general_subtotal", store=True)
+    discount = fields.Float(string='Descuento (%)', digits='Discount')
+    price_subtotal = fields.Float(string='Total FOB',digits='Total FOB', compute="_amount_line", store=True)#
+    tariff_subtotal = fields.Float(string='Tributos', digits='Importation Tributes', compute="_tariff_subtotal", store=True)
+    freight_subtotal = fields.Float(string='Flete',digits='Importation Others', compute="_amount_general_subtotal", store=True)
+    insurance_subtotal = fields.Float(string='Seguro',digits='Importation Others', compute="_amount_general_subtotal", store=True)
     expenses_abroad = fields.Float(string='Gastos Exteriores', digits='Importation Others',
-                                      digits_compute='Importation Others',
+
                                       compute="_amount_general_subtotal", store=True, help="Gastos del exterior que no afectan el costo, solo para calcular impuestos de aduana.")
-    expenses_subtotal = fields.Float(string='Gastos',digits='Import Expenses', digits_compute='Import Expenses', compute="_amount_general_subtotal", store=True)
-    share = fields.Float(string=u'% REP', digits_compute='Importation Factor', digits='Importation Factor',
+    expenses_subtotal = fields.Float(string='Gastos',digits='Import Expenses', compute="_amount_general_subtotal", store=True)
+    share = fields.Float(string=u'% REP',  digits='Importation Factor',
                                      compute="_amount_line_share", store=True, help=u"% de Representación es el impacto que tiene cada rubro sobre el total FOB")
-    amount_total = fields.Float(string='Total Costo',digits='Total Costs of Import', digits_compute='Total Costs of Import', compute="_amount_general_total", store=True)
-    factor = fields.Float(string=u'Factor', digits_compute='Account', compute="_amount_general_total",
+    amount_total = fields.Float(string='Total Costo',digits='Total Costs of Import',compute="_amount_general_total", store=True)
+    factor = fields.Float(string=u'Factor', compute="_amount_general_total",
                           store=True, help=u"Porcentaje de incremento de la importación despues de gastos e impuestos")
-    unit_cost = fields.Float(string='Costo Unit.',digits='Importation Costs', digits_compute='Importation Costs', compute="_amount_general_total",store=True)
-    order_id = fields.Many2one('ek.import.liquidation', string=u'Importación', select=True,ondelete='cascade')
+    unit_cost = fields.Float(string='Costo Unit.',digits='Importation Costs', compute="_amount_general_total",store=True)
+    order_id = fields.Many2one('ek.import.liquidation', string=u'Importación', ondelete='cascade')
 
     company_id = fields.Many2one('res.company', string=u'Compañía', related="order_id.company_id", select=1, store=True, default=lambda self: self.env.company.id)
 
@@ -1232,7 +1231,7 @@ class ek_tariff_rule_line(models.Model):
 
     line_liquidation_id = fields.Many2one("ek.import.liquidation.line", string=u"Líneas", required=False, ondelete='cascade')
     rule_id = fields.Many2one("ek.tariff.rule", string="Regla", required=False, help="")
-    amount = fields.Float(string="Valor", required=False, digits='Total Costs of Rule', digits_compute='Total Costs of Rule')
+    amount = fields.Float(string="Valor", required=False, digits='Total Costs of Rule',)
     terms_id = fields.Many2one("ek.incoterms.terms", string="Aplicar A", required=False)
 
 
@@ -1240,19 +1239,19 @@ class ek_import_liquidation_breakdown_expenses(models.Model):
     _name = 'ek.import.liquidation.breakdown.expenses'
     _description = u'Desglose de gastos de importación'
     _order = 'sequence'
-    order_id = fields.Many2one('ek.import.liquidation', string=u'Importación', select=True, ondelete='cascade')
+    order_id = fields.Many2one('ek.import.liquidation', string=u'Importación',  ondelete='cascade')
 
     terms_id = fields.Many2one("ek.incoterms.terms", string="Termino", required=True)
-    amount = fields.Float(string='Valor', digits_compute='Account')
+    amount = fields.Float(string='Valor', digits='Account')
     code = fields.Char(u'Código', size=64, required=False, readonly=False, related="terms_id.code", store=True)
     type = fields.Selection(string="Tipo",
                             selection=[('freight', 'Flete'), ('insurance', 'Seguro'), ('expense', 'Gasto'),
                                        ('other', 'Otros'), ('liquidation', 'Otros')], required=False, store=True, related="terms_id.type", default="other")
     sequence = fields.Integer('Orden', required=False, help=u'Úselo para organizar la secuencia de cálculo',
-                              select=True, related="terms_id.sequence", store=True)
+                               related="terms_id.sequence", store=True)
     manual = fields.Boolean(string="Manual",  default=True)
     is_required = fields.Boolean(string="Requerido")
-    is_considered_total = fields.Boolean(string="Considerado en el total?", select=True, related="terms_id.is_considered_total", store=True)
+    is_considered_total = fields.Boolean(string="Considerado en el total?",  related="terms_id.is_considered_total", store=True)
     #
     #amount_type = fields.Selection(string="Tipo de monto", selection=[('value', 'Por Valor'), ('weight', 'Por Peso'), ('quantity', 'Por Cantidad'), ], required=True, default="value")
 
@@ -1266,7 +1265,7 @@ class ek_import_liquidation_related_documents(models.Model):
     _name = 'ek.import.liquidation.related.documents'
     _description = u'Desglose de documentos de importación'
 
-    order_id = fields.Many2one('ek.import.liquidation', string=u'Importación', select=True, ondelete='cascade')
+    order_id = fields.Many2one('ek.import.liquidation', string=u'Importación',  ondelete='cascade')
 
     type_doc = fields.Selection(string="Tipo de Documento",
                                 selection=[('fiscal', 'Relacionado'),
@@ -1279,7 +1278,7 @@ class ek_import_liquidation_related_documents(models.Model):
     voucher_id = fields.Many2one("account.move", string="Documento", required=False, help="")
     generic_document_id = fields.Many2one("ek.generic.documents", string="Documento", required=False, help="")
     type = fields.Many2one("ek.import.liquidation.type.docs", string="Tipo", required=False, help="")
-    amount = fields.Float(string='Total', digits_compute='Account')
+    amount = fields.Float(string='Total', digits='Account')
     name = fields.Char(string=u"Número", required=False, help="")
     date = fields.Date(string="Fecha", required=False, help="")
     partner_id = fields.Many2one('res.partner', string='Proveedor',change_default=True,track_visibility='always')
@@ -1307,9 +1306,9 @@ class ek_import_liquidation_related_documents_line(models.Model):
     line_invoice_id = fields.Many2one("account.move.line", string="Linea Factura", required=False, )
 
     name = fields.Text(u'Descripción', required=True)
-    product_qty = fields.Float('Cantidad', digits_compute='Product Unit of Measure',
+    product_qty = fields.Float('Cantidad', digits='Product Unit of Measure',
                                required=True, default=1)
-    product_weight = fields.Float('Peso/Kg', digits_compute='Product Unit of Measure',
+    product_weight = fields.Float('Peso/Kg', digits='Product Unit of Measure',
                                   required=False, default=0.00)
 
     product_uom = fields.Many2one('uom.uom', string='Unidad de Medida', required=False)
@@ -1320,7 +1319,7 @@ class ek_import_liquidation_related_documents_line(models.Model):
                               digits_compute='Product Price'))'''
 
 
-    price_subtotal = fields.Float(string='Monto', digits_compute='Account')
+    price_subtotal = fields.Float(string='Monto', digits='Account')
 
     related_documents_id = fields.Many2one("ek.import.liquidation.related.documents", string="Documento", required=False, help="")
 

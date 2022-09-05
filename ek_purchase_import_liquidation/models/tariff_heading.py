@@ -60,8 +60,8 @@ class ek_tariff_rule(models.Model):
         ('fix','Importe Fijo'),
         ('code',u'Código Python')
     ],'Tipo de importe', select=True, required=True, help=u"El método de cálculo para la cantidad de regla.", default='fix')
-    amount_fix = fields.Float('Importe fijo', digits_compute='Payroll',default=0.00)
-    amount_percentage = fields.Float('Porcentaje (%)', digits_compute='Payroll Rate', help=u'Por ejemplo, ingrese 50.0 para aplicar un porcentaje del 50%',default=0.00)
+    amount_fix = fields.Float('Importe fijo', digits='Account',default=0.00)
+    amount_percentage = fields.Float('Porcentaje (%)', digits='Account', help=u'Por ejemplo, ingrese 50.0 para aplicar un porcentaje del 50%',default=0.00)
 
     amount_percentage_base = fields.Char('Porcentaje basado en', required=False, readonly=False, help=u'El resultado se verá afectado por una variable')
     note = fields.Text(u'Descripción')

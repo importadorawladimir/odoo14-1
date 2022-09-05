@@ -29,6 +29,7 @@
     'category': 'Import',
     'complexity': 'normal',
     'website': 'http://www.ekuasoft.com',
+    'license': 'OPL-1',
     'data': [
         'data/ek_purchase_import_liquidation.xml',
         'data/data_import_liquidation.xml',
