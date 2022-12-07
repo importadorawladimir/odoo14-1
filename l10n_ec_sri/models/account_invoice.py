@@ -386,6 +386,8 @@ class AccountMove(models.Model):
         totalDescuento = 0.00
         other_vat_zero = {}
         for line in self.invoice_line_ids:
+            if line.display_type == 'line_section' or line.display_type == 'line_note':
+                continue
             impuestos = OrderedDict([
                 ('impuesto', []),
             ])
