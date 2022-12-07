@@ -434,7 +434,7 @@ class AccountMove(models.Model):
                 ('descuento', '{:.2f}'.format(discount)),
                 ('precioTotalSinImpuesto', '{:.2f}'.format(line.price_subtotal)),
             ])
-            totalDescuento+=line.discount
+            totalDescuento+=discount
 
 
 
