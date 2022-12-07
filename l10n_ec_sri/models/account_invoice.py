@@ -422,14 +422,16 @@ class AccountMove(models.Model):
                                 'valor': '{:.2f}'.format(0),
                             }
                         other_vat_zero[tax.tax_group_id.l10n_ec_type]['baseImponible'] +=base
-
+            discount = 0.00
+            if line.discount:
+                discount = (line.price_unit * line.quantity) - line.price_subtotal
             detalle = OrderedDict([
                 ('codigoPrincipal', line.product_id.default_code),
                 ('codigoAuxiliar', line.product_id.barcode),
                 ('descripcion', line.name and str(self.normalize(line.name)).replace("'","") or str(self.normalize(line.product_id.name)).replace("'","")),
                 ('cantidad', '{:.6f}'.format(line.quantity)),
                 ('precioUnitario', '{:.6f}'.format(line.price_unit)),
-                ('descuento', '{:.2f}'.format(line.discount)),
+                ('descuento', '{:.2f}'.format(discount)),
                 ('precioTotalSinImpuesto', '{:.2f}'.format(line.price_subtotal)),
             ])
             totalDescuento+=line.discount
